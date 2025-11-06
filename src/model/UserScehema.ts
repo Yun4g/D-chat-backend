@@ -1,0 +1,24 @@
+import mongoose from "mongoose";
+
+
+interface IUser {
+    userName: string;
+    email: string;
+    password: string;
+    avatarUrl?: string;
+    createdAt?: Date;
+}
+
+
+const UserSchema = new mongoose.Schema<IUser>({
+    userName: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    avatarUrl: { type: String },
+    createdAt: { type: Date, default: Date.now }
+});
+
+
+const UserModel = mongoose.model<IUser>("User", UserSchema);
+
+export { UserModel };
