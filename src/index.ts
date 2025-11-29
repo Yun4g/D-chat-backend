@@ -1,5 +1,4 @@
 import dotenv from 'dotenv';
-
 dotenv.config();
 
 import express, { Request, Response, NextFunction } from 'express';
@@ -7,10 +6,11 @@ import authRoute from './routes/authRoute.js';
 import { connectDB } from './db/db.js';
 
 const server = express();
-const Port = process.env.PORT as string;
-
 
 server.use(express.json());
+const Port = process.env.PORT  || 5000;
+
+
 server.use(express.urlencoded({ extended: true }));
 
 
@@ -34,6 +34,7 @@ server.get('/', (req, res) => {
 server.listen(Port, () => {
     console.log(`server running succesfully on port ${Port}`)
 })
+export default server;
 
 
 

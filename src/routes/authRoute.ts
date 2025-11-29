@@ -4,21 +4,16 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { UserModel } from "../model/UserScehema.js";
 import { uploadToCloud } from "../utils/cloudUpload.js";
+import { sendEmail } from "../utils/sendEmail.js";
 
 
 
 const route = Router();
 
-
-
-
-
-
 route.post('/signup', async (req, res) => {
     await connectDB();
        try {
-           const { userName, email, password, avatarUrl } = req.body;
-
+         const { userName, email, password, avatarUrl } = req.body;
            if (!userName || !email || !password) {
                return res.status(400).json({ 
                    error: 'Username, email, and password are required'
@@ -29,19 +24,15 @@ route.post('/signup', async (req, res) => {
                    error: 'Avatar URL must be a valid string'
                });
            }
-
-           const existingUser = await UserModel.findOne({ email });
+         const existingUser = await UserModel.findOne({ email });
            if (existingUser) {
              return  res.status(400).send('user with the given Email already exist')
-         }
-         
+         }       
          let CloudImage = null;
          if (avatarUrl) {
              CloudImage = await uploadToCloud(avatarUrl);
              if (!CloudImage) {
-                 return res.status(400).json({
-                     error: 'Failed to upload avatar image. '
-                 });
+                 return res.status(400).json({ error: 'Failed to upload avatar image. ' });
              }
          }
 
@@ -110,6 +101,71 @@ route.post('/login', async (req, res) => {
 }) 
 
 
+
+route.post('/forgot-password', async (req, res) => {
+  await connectDB();
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).send('Email is required');
+  }
+   
+  try {
+     const user = await UserModel.findOne({ email });
+     if (!user) {
+       return res.status(404).send('User with the given email does not exist');
+     }
+      const resetToken = jwt.sign({email}, process.env.JWT_SECRET as string, { expiresIn: '1h' });
+    
+      const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
+
+      const message = `
+      <p>You requested a password reset.</p>
+      <p>Click the link below to reset your password:</p>
+      <a href="${resetLink}">${resetLink}</a>
+      <p>This link expires in 1 hour.</p>
+      
+      `
+       await sendEmail( email, 'Password Reset Request', message
+      );
+
+      res.status(200).send('Password reset email sent successfully');
+  } catch (error) {
+    console.log(error);
+    res.status(500).send("server error  " + error);
+  }
+
+})
+
+
+
+route.post('/reset-password:id', async (req, res) => {
+  await connectDB();
+
+  try {
+    const { email, newPassword } = req.body;
+    const {token} = req.query;
+
+    if (!token) {
+      return res.status(401).send('Invalid or missing reset token');
+    }
+    if (!email || !newPassword) {
+      return res.status(400).send('Email and new password are required');
+    }
+    const existingUser = await UserModel.findOne({ email });
+    if (!existingUser) {
+      return res.status(404).send('User with the given email does not exist');
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    existingUser.password = hashedPassword;
+    await existingUser.save();
+
+    return res.status(200).send('Password updated successfully');
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send(`An error occurred: ${error}`);
+  }
+});
 
 
 export default route;
