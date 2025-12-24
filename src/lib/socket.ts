@@ -1,0 +1,56 @@
+import { Server, Socket } from "socket.io";
+import type { Server as HttpServer } from "http";
+import { MessageModel } from "../model/messageSchema.js";
+
+let io: Server | null = null;
+
+export const initialSocket = (server: HttpServer): Server => {
+  if (io) return io;
+
+  io = new Server(server, {
+    cors: {
+      origin: process.env.FRONTEND_URL,
+      methods: ["GET", "POST"],
+    },
+  });
+
+  io.on("connection", (socket: Socket) => {
+    console.log("User connected:", socket.id);
+ 
+    socket.on("register", (userId: string) => {
+      socket.join(userId);
+      console.log(`User ${userId} joined room ${userId}`); 
+    });
+
+    socket.on("joinRoom", (roomId: string) => {
+        socket.join(roomId);
+        console.log(`User joined room ${roomId}`);
+    }
+   );
+
+   socket.on("sendMessage", async(data: { roomId: string; message: string; senderId: string }) => {
+        const { roomId, message, senderId } = data;
+          await MessageModel.create({
+            message,
+            sender: senderId,
+            roomId
+        });
+        io?.to(roomId).emit("receiveMessage", { message, senderId });
+     }
+  )
+
+  
+    socket.on("disconnect", () => {
+      console.log("User disconnected:", socket.id);
+    });
+ 
+  });
+   return io;
+};
+
+export const getIO = (): Server => {
+  if (!io) {
+    throw new Error("Socket.io not initialized");
+  }
+  return io;
+};

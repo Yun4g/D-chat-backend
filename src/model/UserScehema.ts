@@ -1,12 +1,16 @@
 import mongoose from "mongoose";
 
 
+
 interface IUser {
     userName: string;
     email: string;
     password: string;
     avatarUrl?: string;
     createdAt?: Date;
+    bio?: string;
+    pendingRequestId?: string | number;
+
 }
 
 
@@ -15,7 +19,9 @@ const UserSchema = new mongoose.Schema<IUser>({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     avatarUrl: { type: String },
-    createdAt: { type: Date, default: Date.now }
+    bio:  { type: String },
+    createdAt: { type: Date, default: Date.now },
+    pendingRequestId: { type: String,  },
 });
 
 

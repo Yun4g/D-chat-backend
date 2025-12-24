@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { UserModel } from "../model/UserScehema.js";
 import { uploadToCloud } from "../utils/cloudUpload.js";
-import { sendEmail } from "../utils/sendEmail.js";
+import { sendForgotPassWordEmail } from "../utils/sendEmail.js";
 
 
 
@@ -82,15 +82,22 @@ route.post('/login', async (req, res) => {
     const token = jwt.sign(
       { id: existingAccount._id, email: existingAccount.email },
         process.env.JWT_SECRET  as string,
-        { expiresIn: '1d' }
+        { expiresIn: '7d' }
     )
 
     const { password: _, ...userData } = existingAccount.toObject();
 
+    res.cookie('token', token,{
+       httpOnly: true,
+       secure: false,
+       sameSite: "strict",
+       maxAge:  6 * 24 * 60 * 60 * 1000
+    })
+   
     return res.status(200).json({
       status: "success",
       user:  userData,
-      token: token,
+      
     })
 
   } catch (error) {
@@ -116,18 +123,16 @@ route.post('/forgot-password', async (req, res) => {
      }
       const resetToken = jwt.sign({email}, process.env.JWT_SECRET as string, { expiresIn: '1h' });
     
-      const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
+      const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
       const message = `
       <p>You requested a password reset.</p>
       <p>Click the link below to reset your password:</p>
       <a href="${resetLink}">${resetLink}</a>
-      <p>This link expires in 1 hour.</p>
-      
+      <p>This link expires in 1 hour.</p>   
       `
-       await sendEmail( email, 'Password Reset Request', message
+       await sendForgotPassWordEmail( email, 'Password Reset Request', message
       );
-
       res.status(200).send('Password reset email sent successfully');
   } catch (error) {
     console.log(error);

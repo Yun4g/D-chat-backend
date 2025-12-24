@@ -4,10 +4,21 @@ dotenv.config();
 import express, { Request, Response, NextFunction } from 'express';
 import authRoute from './routes/authRoute.js';
 import { connectDB } from './db/db.js';
-
+import cookieParser from "cookie-parser";
+import { createServer } from 'http';
+import { initialSocket } from './lib/socket.js';
 const server = express();
 
+
+const httpServer = createServer(server);
+
+initialSocket(httpServer)
+
+
+
+
 server.use(express.json());
+server.use(cookieParser())
 const Port = process.env.PORT  || 5000;
 
 
@@ -23,6 +34,9 @@ server.use((req, res, next) => {
 
 connectDB().then(() => {
 server.use('/api', authRoute);
+
+
+
 server.get('/', (req, res) => {
      res.send('Welcome to D-CHAT Backend')
 })
