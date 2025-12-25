@@ -15,7 +15,7 @@ const io = getIO();
 route.post('/sendRequest', async (req, res) => {
     const { senderId, receiverId, receiverEmail, } = req.body;
     if (!senderId || !receiverId) {
-        return res.status(400).send("senderId  and recieverId")
+        return res.status(400).send("senderId  and recieverId is required")
     };
     try {
         const getReceiver = await UserModel.findById(receiverId);

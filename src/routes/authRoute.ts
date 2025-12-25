@@ -50,8 +50,7 @@ route.post('/signup', async (req, res) => {
         return   res.status(201).json({
                message: 'User Created Successfully',
                User: userData ,
-           })
-           
+           })    
 
        } catch (error) {
           console.log(error)
@@ -91,7 +90,7 @@ route.post('/login', async (req, res) => {
        httpOnly: true,
        secure: false,
        sameSite: "strict",
-       maxAge:  6 * 24 * 60 * 60 * 1000
+       maxAge:  7 * 24 * 60 * 60 * 1000
     })
    
     return res.status(200).json({
@@ -143,7 +142,7 @@ route.post('/forgot-password', async (req, res) => {
 
 
 
-route.post('/reset-password:id', async (req, res) => {
+route.post('/reset-password:token', async (req, res) => {
   await connectDB();
 
   try {
