@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, Request  } from "express";
 import { connectDB } from "../db/db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -15,7 +15,7 @@ route.post('/signup', upload.single('avatar'), async (req, res) => {
     await connectDB();
        try {
       const { userName, email, password, avatarUrl } = req.body;
-      const file = (req as any).file;
+      const file = (req as Request & { file?: Express.Multer.File } ).file;
            if (!userName || !email || !password) {
                return res.status(400).json({ 
                    error: 'userName, email, and password are required'
