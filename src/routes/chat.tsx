@@ -29,12 +29,13 @@ route.get('/friendsList/:userId', async (req, res) => {
         return res.status(200).json({ message: "No friends found", friends: [] });
       }
 
-      const friendsid = friends.map(friend => friend.sender === userId ? friend.receiver : friend.sender)
+      const friendsid = friends.map(friend => friend.sender === userId ? friend.receiver : friend.sender);
+     const getFriends = await UserModel.find({ _id: { $in: friendsid } });
+
 
       res.status(200).json({ 
-        friends,
+         friends: getFriends,
          message: "Friends retrieved successfully",
-         friendsId: friendsid
        });
 
 

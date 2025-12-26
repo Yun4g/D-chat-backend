@@ -6,6 +6,7 @@ import { sendFreindRequestEmail } from "../utils/sendEmail.js";
 import { getIO } from '../lib/socket.js';
 import Freinds from '../model/freindSchema.js';
 import { v4 as uuidv4 } from "uuid";
+import notification from '../model/notification.js';
 
 
 const route = Router();
@@ -43,9 +44,13 @@ route.post('/sendRequest', async (req, res) => {
         await sendFreindRequestEmail(receiverEmail, `Freind Request ${senderId}`, message);
 
 
-        io.emit('notification', {
+        io.to(receiverId).emit('notification', {
             requestId: FriendRequest._id,
             message: `friend request from ${Sender.userName}`
+        });
+        await notification.create({
+             requestId: FriendRequest._id,
+             message: `friend request from ${Sender.userName}` 
         })
 
 
@@ -88,7 +93,7 @@ route.post('/AcceptRequest', async (req, res) => {
             receiverId: receiverId,
             status: "accepted",
             roomId: uniqueroomId,
-        })
+        });
        
         const AcceptLink =`${process.env.FRONTEND_URL}`;
         const message = `

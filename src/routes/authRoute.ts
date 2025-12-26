@@ -16,14 +16,18 @@ route.post('/signup', async (req, res) => {
          const { userName, email, password, avatarUrl } = req.body;
            if (!userName || !email || !password) {
                return res.status(400).json({ 
-                   error: 'Username, email, and password are required'
+                   error: 'userName, email, and password are required'
                });
            }
+
+
            if (avatarUrl && typeof avatarUrl !== 'string') {
                return res.status(400).json({ 
                    error: 'Avatar URL must be a valid string'
                });
            }
+
+           console.log(avatarUrl, 'avatarUrl');
          const existingUser = await UserModel.findOne({ email });
            if (existingUser) {
              return  res.status(400).send('user with the given Email already exist')
@@ -31,6 +35,7 @@ route.post('/signup', async (req, res) => {
          let CloudImage = null;
          if (avatarUrl) {
              CloudImage = await uploadToCloud(avatarUrl);
+             console.log(CloudImage, 'CloudImage');
              if (!CloudImage) {
                  return res.status(400).json({ error: 'Failed to upload avatar image. ' });
              }
@@ -130,8 +135,7 @@ route.post('/forgot-password', async (req, res) => {
       <a href="${resetLink}">${resetLink}</a>
       <p>This link expires in 1 hour.</p>   
       `
-       await sendForgotPassWordEmail( email, 'Password Reset Request', message
-      );
+       await sendForgotPassWordEmail( email, 'Password Reset Request', message);
       res.status(200).send('Password reset email sent successfully');
   } catch (error) {
     console.log(error);
