@@ -4,42 +4,55 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { UserModel } from "../model/UserScehema.js";
 import { uploadToCloud } from "../utils/cloudUpload.js";
+import upload from "../middleware/mutler.js";
 import { sendForgotPassWordEmail } from "../utils/sendEmail.js";
 
 
 
 const route = Router();
 
-route.post('/signup', async (req, res) => {
+route.post('/signup', upload.single('avatar'), async (req, res) => {
     await connectDB();
        try {
-         const { userName, email, password, avatarUrl } = req.body;
+      const { userName, email, password, avatarUrl } = req.body;
+      const file = (req as any).file;
            if (!userName || !email || !password) {
                return res.status(400).json({ 
                    error: 'userName, email, and password are required'
                });
            }
 
-
-           if (avatarUrl && typeof avatarUrl !== 'string') {
-               return res.status(400).json({ 
-                   error: 'Avatar URL must be a valid string'
-               });
-           }
+      if (avatarUrl && typeof avatarUrl !== 'string') {
+        return res.status(400).json({ 
+          error: 'Avatar URL must be a valid string'
+        });
+      }
 
            console.log(avatarUrl, 'avatarUrl');
          const existingUser = await UserModel.findOne({ email });
            if (existingUser) {
              return  res.status(400).send('user with the given Email already exist')
          }       
-         let CloudImage = null;
-         if (avatarUrl) {
-             CloudImage = await uploadToCloud(avatarUrl);
-             console.log(CloudImage, 'CloudImage');
-             if (!CloudImage) {
-                 return res.status(400).json({ error: 'Failed to upload avatar image. ' });
-             }
-         }
+        let CloudImage = null;
+        if (file) {
+          try {
+            const base64 = file.buffer.toString('base64');
+            const dataUri = `data:${file.mimetype};base64,${base64}`;
+            CloudImage = await uploadToCloud(dataUri);
+          } catch (err) {
+            console.log('file upload error', err);
+            return res.status(400).json({ error: 'Failed to upload avatar image.' });
+          }
+          if (!CloudImage) {
+            return res.status(400).json({ error: 'Failed to upload avatar image.' });
+          }
+        } else if (avatarUrl) {
+          CloudImage = await uploadToCloud(avatarUrl);
+          console.log(CloudImage, 'CloudImage');
+          if (!CloudImage) {
+            return res.status(400).json({ error: 'Failed to upload avatar image. ' });
+          }
+        }
 
          const salt = await bcrypt.genSalt(10);
          const hashedPassword = await bcrypt.hash(password, salt);
