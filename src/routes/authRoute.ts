@@ -1,5 +1,4 @@
-import { Router, Request  } from "express";
-import { connectDB } from "../db/db.js";
+import { Router, Request } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { UserModel } from "../model/UserScehema.js";
@@ -11,145 +10,139 @@ import { sendForgotPassWordEmail } from "../utils/sendEmail.js";
 
 const route = Router();
 
-route.post('/signup', upload.single('avatar'), async (req, res) => {
-    await connectDB();
-       try {
-      const { userName, email, password, avatarUrl } = req.body;
-      const file = (req as Request & { file?: Express.Multer.File } ).file;
-           if (!userName || !email || !password) {
-               return res.status(400).json({ 
-                   error: 'userName, email, and password are required'
-               });
-           }
 
-      if (avatarUrl && typeof avatarUrl !== 'string') {
-        return res.status(400).json({ 
-          error: 'Avatar URL must be a valid string'
-        });
+
+// signup
+route.post('/signup', upload.single('avatarUrl'), async (req, res) => {
+  
+  try {
+    const { userName, email, password,  } = req.body;
+    const file = (req as Request & { file?: Express.Multer.File }).file;
+    if (!userName || !email || !password) {
+      return res.status(400).json({
+        error: 'userName, email, and password are required'
+      });
+    }
+
+    const existingUser = await UserModel.findOne({ email });
+    if (existingUser) {
+      return res.status(400).send('user with the given Email already exist')
+    }
+    let CloudImage = null;
+    if (file) {
+      try {
+        const base64 = file.buffer.toString('base64');
+        const dataUri = `data:${file.mimetype};base64,${base64}`;
+        CloudImage = await uploadToCloud(dataUri);
+      } catch (err) {
+        console.log('file upload error', err);
+        return res.status(400).json({ error: 'Failed to upload avatar image.' });
       }
+      if (!CloudImage) {
+        return res.status(400).json({ error: 'Failed to upload avatar image.' });
+      }
+    } 
 
-           console.log(avatarUrl, 'avatarUrl');
-         const existingUser = await UserModel.findOne({ email });
-           if (existingUser) {
-             return  res.status(400).send('user with the given Email already exist')
-         }       
-        let CloudImage = null;
-        if (file) {
-          try {
-            const base64 = file.buffer.toString('base64');
-            const dataUri = `data:${file.mimetype};base64,${base64}`;
-            CloudImage = await uploadToCloud(dataUri);
-          } catch (err) {
-            console.log('file upload error', err);
-            return res.status(400).json({ error: 'Failed to upload avatar image.' });
-          }
-          if (!CloudImage) {
-            return res.status(400).json({ error: 'Failed to upload avatar image.' });
-          }
-        } else if (avatarUrl) {
-          CloudImage = await uploadToCloud(avatarUrl);
-          console.log(CloudImage, 'CloudImage');
-          if (!CloudImage) {
-            return res.status(400).json({ error: 'Failed to upload avatar image. ' });
-          }
-        }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    const newUser = await UserModel.create({
+      userName: userName,
+      email: email,
+      password: hashedPassword,
+      avatarUrl: CloudImage,
+    })
 
-         const salt = await bcrypt.genSalt(10);
-         const hashedPassword = await bcrypt.hash(password, salt);
-         const newUser = await UserModel.create({
-             userName: userName,
-             email: email,
-             password: hashedPassword,
-             avatarUrl: CloudImage,
-         })
+    const { password: _, ...userData } = newUser.toObject();
 
-           const { password: _, ...userData } = newUser.toObject();
+    return res.status(201).json({
+      message: 'User Created Successfully',
+      User: userData,
+    })
 
-        return   res.status(201).json({
-               message: 'User Created Successfully',
-               User: userData ,
-           })    
+  } catch (error) {
+    console.log(error)
+    return res.status(500).send(`an error occured ${error} ` || 'Internal Server Error')
 
-       } catch (error) {
-          console.log(error)
-         return   res.status(500).send(`an error occured ${error}`)
-          
-       }
+  }
 });
 
- 
+
+
+
+
+// login
 route.post('/login', async (req, res) => {
-  await connectDB();
+
   try {
     const { userName, email, password } = req.body;
-     if (!userName || !email || !password) {
-       return  res.status(400).send(' username, email , password  are required')
+    if (!userName || !email || !password) {
+      return res.status(400).send(' username, email , password  are required')
     }
-    
+
     const existingAccount = await UserModel.findOne({ email });
     if (!existingAccount) {
-       return res.status(404).send(' user with the giving email does not exist ')
+      return res.status(404).send(' user with the giving email does not exist ')
     }
 
     const isPasswordValid = await bcrypt.compare(password, existingAccount.password);
     if (!isPasswordValid) {
-       return res.status(400).send(' invalid credentials ')
+      return res.status(400).send(' invalid credentials ')
     }
 
     const token = jwt.sign(
       { id: existingAccount._id, email: existingAccount.email },
-        process.env.JWT_SECRET  as string,
-        { expiresIn: '7d' }
+      process.env.JWT_SECRET as string,
+      { expiresIn: '7d' }
     )
 
     const { password: _, ...userData } = existingAccount.toObject();
 
-    res.cookie('token', token,{
-       httpOnly: true,
-       secure: false,
-       sameSite: "strict",
-       maxAge:  7 * 24 * 60 * 60 * 1000
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000
     })
-   
+
     return res.status(200).json({
       status: "success",
-      user:  userData,
-      
+      user: userData,
+
     })
 
   } catch (error) {
-        console.log(error)
-      return   res.status(500).send(`an error occured ${error}`)
-       
+    console.log(error)
+    return res.status(500).send(`an error occured ${error}`)
+
   }
-}) 
+})
 
 
 
 route.post('/forgot-password', async (req, res) => {
-  await connectDB();
+
   const { email } = req.body;
   if (!email) {
     return res.status(400).send('Email is required');
   }
-   
-  try {
-     const user = await UserModel.findOne({ email });
-     if (!user) {
-       return res.status(404).send('User with the given email does not exist');
-     }
-      const resetToken = jwt.sign({email}, process.env.JWT_SECRET as string, { expiresIn: '1h' });
-    
-      const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
-      const message = `
+  try {
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return res.status(404).send('User with the given email does not exist');
+    }
+    const resetToken = jwt.sign({ email }, process.env.JWT_SECRET as string, { expiresIn: '1h' });
+
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+
+    const message = `
       <p>You requested a password reset.</p>
       <p>Click the link below to reset your password:</p>
       <a href="${resetLink}">${resetLink}</a>
       <p>This link expires in 1 hour.</p>   
       `
-       await sendForgotPassWordEmail( email, 'Password Reset Request', message);
-      res.status(200).send('Password reset email sent successfully');
+    await sendForgotPassWordEmail(email, 'Password Reset Request', message);
+    res.status(200).send('Password reset email sent successfully');
   } catch (error) {
     console.log(error);
     res.status(500).send("server error  " + error);
@@ -160,11 +153,11 @@ route.post('/forgot-password', async (req, res) => {
 
 
 route.post('/reset-password:token', async (req, res) => {
-  await connectDB();
+  
 
   try {
     const { email, newPassword } = req.body;
-    const {token} = req.query;
+    const { token } = req.query;
 
     if (!token) {
       return res.status(401).send('Invalid or missing reset token');
