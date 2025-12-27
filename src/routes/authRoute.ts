@@ -71,12 +71,12 @@ route.post('/signup', upload.single('avatarUrl'), async (req, res) => {
 
 
 // login
-route.post('/login', async (req, res) => {
+route.post('/login', async (req, res, next) => {
 
   try {
-    const { userName, email, password } = req.body;
-    if (!userName || !email || !password) {
-      return res.status(400).send(' username, email , password  are required')
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).send(' email , password  are required')
     }
 
     const existingAccount = await UserModel.findOne({ email });
@@ -104,16 +104,11 @@ route.post('/login', async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000
     })
 
-    return res.status(200).json({
-      status: "success",
-      user: userData,
-
-    })
+    return res.status(200).json({ status: "success", user: userData, })
 
   } catch (error) {
     console.log(error)
-    return res.status(500).send(`an error occured ${error}`)
-
+    next(error);
   }
 })
 

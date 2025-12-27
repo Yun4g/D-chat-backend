@@ -10,7 +10,7 @@ import { initialSocket } from './lib/socket.js';
 import { globalErrorHandler } from './middleware/GlobalError.js';
 const server = express();
 
-
+await connectDB();
 server.use(express.json());
 
 //  server for socket.io
@@ -29,17 +29,10 @@ server.use(express.urlencoded({ extended: true }));
 
 
 // routes
-connectDB().then(() => {
+
 server.use('/api', authRoute);
-
-
-
 server.get('/', (req, res) => {
      res.send('Welcome to D-CHAT Backend')
-})
-}).catch(err => {
-    console.error('Failed to connect to MongoDB:', err);
-    process.exit(1);
 });
 
 // global error handler
