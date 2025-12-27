@@ -137,7 +137,8 @@ route.post('/forgot-password', async (req, res) => {
       <p>This link expires in 1 hour.</p>   
       `
     await sendForgotPassWordEmail(email, 'Password Reset Request', message);
-    res.status(200).send('Password reset email sent successfully');
+    console.log('Password reset email sent to:', email);
+   return res.status(200).send('Password reset email sent successfully');
   } catch (error) {
     console.log(error);
     res.status(500).send("server error  " + error);
