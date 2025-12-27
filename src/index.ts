@@ -7,24 +7,22 @@ import { connectDB } from './db/db.js';
 import cookieParser from "cookie-parser";
 import { createServer } from 'http';
 import { initialSocket } from './lib/socket.js';
+import { globalErrorHandler } from './middleware/GlobalError.js';
 const server = express();
 
 
-const httpServer = createServer(server);
+server.use(express.json());
 
+//  server for socket.io
+const httpServer = createServer(server);
 initialSocket(httpServer)
 
 
-
-
-server.use(express.json());
+// middlewares
+server.use(globalErrorHandler);
 server.use(cookieParser())
 const Port = process.env.PORT  || 5000;
-
-
 server.use(express.urlencoded({ extended: true }));
-
-
 server.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -32,6 +30,8 @@ server.use((req, res, next) => {
     next();
 });
 
+
+// routes
 connectDB().then(() => {
 server.use('/api', authRoute);
 
