@@ -148,7 +148,7 @@ route.post('/forgot-password', async (req, res) => {
 
 
 
-route.post('/reset-password:token', async (req, res) => {
+route.post('/reset-password/:token', async (req, res) => {
   
 
   try {
