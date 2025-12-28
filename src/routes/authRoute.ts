@@ -153,7 +153,8 @@ route.post('/reset-password/:token', async (req, res) => {
 
   try {
     const { email, newPassword } = req.body;
-    const { token } = req.query;
+    const { token } = req.params;
+    console.log(token);
 
     if (!token) {
       return res.status(401).send('Invalid or missing reset token');
