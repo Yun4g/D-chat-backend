@@ -3,6 +3,7 @@ dotenv.config();
 import cors from 'cors';
 import express, { Request, Response, NextFunction } from 'express';
 import authRoute from './routes/authRoute.js';
+import chat from './routes/chat.js';
 import { connectDB } from './db/db.js';
 import cookieParser from "cookie-parser";
 import { createServer } from 'http';
@@ -31,6 +32,7 @@ server.use(express.urlencoded({ extended: true }));
 // routes
 
 server.use('/api', authRoute);
+server.use('/api/friend', chat)
 server.get('/', (req, res) => {
      res.send('Welcome to D-CHAT Backend')
 });

@@ -65,3 +65,5 @@ route.get('/chatHistroy/:roomId', async (req, res) => {
         res.status(500).send("Internal server error");
     }
 });
+
+export default route;
