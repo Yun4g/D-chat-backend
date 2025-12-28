@@ -97,14 +97,7 @@ route.post('/login', async (req, res, next) => {
 
     const { password: _, ...userData } = existingAccount.toObject();
 
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    })
-
-    return res.status(200).json({ status: "success", user: userData, })
+    return res.status(200).json({ status: "success", user: userData, token: token });
 
   } catch (error) {
     console.log(error)
@@ -180,13 +173,6 @@ route.post('/reset-password/:token', async (req, res) => {
 
 
 
-route.get('/auth-check', async (req, res) => {
-  const token = req.cookies.token;
-  if (!token) {
-    return res.status(401).send('Unauthorized: No token provided');
-  } else {
-     return res.status(200).send('Authorized');
-  }
-});
+
 
 export default route;
