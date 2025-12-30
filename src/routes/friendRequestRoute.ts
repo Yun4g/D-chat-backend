@@ -10,7 +10,7 @@ import notification from '../model/notification.js';
 
 
 const route = Router();
-const io = getIO();
+
 
 
 route.post('/sendRequest', async (req, res) => {
@@ -19,6 +19,7 @@ route.post('/sendRequest', async (req, res) => {
         return res.status(400).send("senderId  and recieverId is required")
     };
     try {
+        const io = getIO();
         const getReceiver = await UserModel.findById(receiverId);
         if (!getReceiver) {
             return res.status(200).send("User not found")
@@ -67,6 +68,7 @@ route.post('/AcceptRequest', async (req, res) => {
         return res.status(400).send("senderId  and recieverId")
     };
     try {
+        const io = getIO();
         const getReceiver = await UserModel.findById(receiverId);
         if (!getReceiver) {
             return res.status(200).send("User not found")
