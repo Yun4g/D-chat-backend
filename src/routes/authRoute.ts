@@ -81,7 +81,7 @@ route.post('/login', async (req, res, next) => {
 
     const existingAccount = await UserModel.findOne({ email });
     if (!existingAccount) {
-      return res.status(404).send(' user with the giving email does not exist ')
+      return res.status(404).json( {message : ' user with the giving email does not exist '})
     }
 
     const isPasswordValid = await bcrypt.compare(password, existingAccount.password);
