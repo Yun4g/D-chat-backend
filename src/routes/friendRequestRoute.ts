@@ -49,11 +49,11 @@ route.post('/sendRequest', async (req, res) => {
             requestId: FriendRequest._id,
             message: `friend request from ${Sender.userName}`
         });
+
         await notification.create({
-             requestId: FriendRequest._id,
+             userId: receiverId,
              message: `friend request from ${Sender.userName}` 
         })
-
 
         return res.status(200).json({ message: "Request sent Succefully" })
     } catch (error) {

@@ -2,15 +2,18 @@ import mongoose from "mongoose";
 
 
 interface NotificationType {
-    requestId: string,
+    userId: string,
     message: string
+    timestamps: Date
 }
 
 
-const NotificationSchema = new mongoose.Schema<NotificationType>({
-    requestId: {type: String, unique: true, required:true},
-    message: {type: String, unique: true, required:true}
-})
+const NotificationSchema = new mongoose.Schema<NotificationType>( {
+    userId: { type: String, required: true },
+    message: { type: String, required: true },
+  },
+  { timestamps: true }
+)
 
 
 const notification = mongoose.model<NotificationType>("notification", NotificationSchema);
