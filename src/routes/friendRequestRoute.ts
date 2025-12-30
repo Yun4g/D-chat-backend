@@ -144,24 +144,39 @@ route.post('/rejectRequest', async (req, res) => {
 
 });
 
-route.get('/getfriends/:userId', async(req, res)=> {
-      const {userId} = req.params
-    try {
-       const getOtherUsers = await UserModel.find ({ _id: { $ne: userId }, });
-       if (!getOtherUsers) {
-        return  res.status(404).json({message: 'users not found'})
-       }
+route.get('/getfriends/:userId', async (req, res) => {
+  const { userId } = req.params;
 
- 
+  try {
 
-      return res.status(200).json({
-        status: 'success',
-        users: getOtherUsers
-    })
+    const sentRequests = await FriendRequestModel.find({ senderId: userId });
+    const sentRequestMap: Record<string, string> = {};
+    sentRequests.forEach(req => {
+      sentRequestMap[req.receiverId.toString()] = req.status; 
+    });
 
-    } catch (error) {
-       return  res.status(500).send('internal server error')
-    }
+    // 2. Get all users except yourself and except users who accepted your request
+    const getOtherUsers = await UserModel.find({
+      _id: { $ne: userId },
+    });
+
+    // 3. Map the friend request status for each user
+    const usersWithStatus = getOtherUsers.map(user => {
+      return {
+        ...user.toObject(),
+        requestStatus: sentRequestMap[user._id.toString()] || "none",
+      };
+    });
+
+    return res.status(200).json({
+      status: "success",
+      users: usersWithStatus,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send("internal server error");
+  }
 });
+
 
 export default route;
