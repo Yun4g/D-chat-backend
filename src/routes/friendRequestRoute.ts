@@ -141,3 +141,20 @@ route.post('/rejectRequest', async (req, res) => {
     }
 
 });
+
+route.get('/getfriends', async(req, res)=> {
+      
+    try {
+       const getOtherUser = await UserModel.find();
+       if (!getOtherUser) {
+        return  res.status(404).json({message: 'users not found'})
+       }
+
+      return res.status(201).json({
+        status: 'success',
+        users: getOtherUser
+    })
+    } catch (error) {
+       return  res.status(500).send('internal server error')
+    }
+})
