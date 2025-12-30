@@ -1,10 +1,10 @@
 import dotenv from 'dotenv';
 dotenv.config();
 import cors from 'cors';
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
 import authRoute from './routes/authRoute.js';
 import chat from './routes/chat.js';
-import FriendsRequest from  './routes/friendRequestRoute.js'
+
 import { connectDB } from './db/db.js';
 import cookieParser from "cookie-parser";
 import { createServer } from 'http';
@@ -14,7 +14,7 @@ import { authMiddleware } from './middleware/authMiddleware.js';
 import notification from './routes/notification.js'
 const server = express();
 
-await connectDB();
+
 server.use(express.json());
 
 
@@ -27,13 +27,13 @@ server.use(cors({
 const httpServer = createServer(server);
 initialSocket(httpServer)
 
-
+await connectDB();
 
 server.use(cookieParser())
 const Port = process.env.PORT  || 5000;
 server.use(express.urlencoded({ extended: true }));
 
-
+import FriendsRequest from  './routes/friendRequestRoute.js'
 server.use('/api', authRoute);
 server.use('/api', authMiddleware, FriendsRequest )
 server.use('/api',  authMiddleware,  chat);

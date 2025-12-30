@@ -12,7 +12,7 @@ const route = Router();
 
 
 
-// signup
+
 route.post('/signup', upload.single('avatarUrl'), async (req, res) => {
   
   try {
@@ -68,9 +68,6 @@ route.post('/signup', upload.single('avatarUrl'), async (req, res) => {
 
 
 
-
-
-// login
 route.post('/login', async (req, res, next) => {
 
   try {

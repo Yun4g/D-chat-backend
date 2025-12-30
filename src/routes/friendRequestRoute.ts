@@ -20,6 +20,9 @@ route.post('/sendRequest', async (req, res) => {
     };
     try {
         const io = getIO();
+        if (!io) {
+           console.error('error')  
+        }
         const getReceiver = await UserModel.findById(receiverId);
         if (!getReceiver) {
             return res.status(200).send("User not found")

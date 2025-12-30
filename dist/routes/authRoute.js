@@ -6,7 +6,6 @@ import { uploadToCloud } from "../utils/cloudUpload.js";
 import upload from "../middleware/mutler.js";
 import { sendForgotPassWordEmail } from "../utils/sendEmail.js";
 const route = Router();
-// signup
 route.post('/signup', upload.single('avatarUrl'), async (req, res) => {
     try {
         const { userName, email, password, } = req.body;
@@ -54,7 +53,6 @@ route.post('/signup', upload.single('avatarUrl'), async (req, res) => {
         return res.status(500).send(`an error occured ${error} ` || 'Internal Server Error');
     }
 });
-// login
 route.post('/login', async (req, res, next) => {
     try {
         const { email, password } = req.body;
@@ -63,11 +61,11 @@ route.post('/login', async (req, res, next) => {
         }
         const existingAccount = await UserModel.findOne({ email });
         if (!existingAccount) {
-            return res.status(404).send(' user with the giving email does not exist ');
+            return res.status(404).json({ message: ' user with the giving email does not exist ' });
         }
         const isPasswordValid = await bcrypt.compare(password, existingAccount.password);
         if (!isPasswordValid) {
-            return res.status(400).send(' invalid credentials ');
+            return res.status(400).json({ message: 'invalid  Password' });
         }
         const token = jwt.sign({ id: existingAccount._id, email: existingAccount.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
         const { password: _, ...userData } = existingAccount.toObject();
