@@ -10,6 +10,7 @@ import cookieParser from "cookie-parser";
 import { createServer } from 'http';
 import { initialSocket } from './lib/socket.js';
 import { globalErrorHandler } from './middleware/GlobalError.js';
+import { authMiddleware } from './middleware/authMiddleware.js';
 const server = express();
 
 await connectDB();
@@ -33,8 +34,8 @@ server.use(express.urlencoded({ extended: true }));
 // routes
 
 server.use('/api', authRoute);
-server.use('/api/friend', FriendsRequest )
-server.use('/api/chat', chat);
+server.use('/api', authMiddleware, FriendsRequest )
+server.use('/api',  authMiddleware,  chat);
 server.get('/', (req, res) => {
      res.send('Welcome to D-CHAT Backend')
 });
