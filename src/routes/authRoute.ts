@@ -86,9 +86,10 @@ route.post('/login', async (req, res, next) => {
 
     const isPasswordValid = await bcrypt.compare(password, existingAccount.password);
     if (!isPasswordValid) {
-      return res.status(400).send(' invalid credentials ')
+      return res.status(400).json( {message: 'invalid  Password' })
     }
 
+    
     const token = jwt.sign(
       { id: existingAccount._id, email: existingAccount.email },
       process.env.JWT_SECRET as string,
