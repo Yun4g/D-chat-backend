@@ -144,13 +144,15 @@ route.post('/rejectRequest', async (req, res) => {
 
 });
 
-route.get('/getfriends', async(req, res)=> {
-      
+route.get('/getfriends/:userId', async(req, res)=> {
+      const {userId} = req.params
     try {
-       const getOtherUsers = await UserModel.find();
+       const getOtherUsers = await UserModel.find ({ _id: { $ne: userId }, });
        if (!getOtherUsers) {
         return  res.status(404).json({message: 'users not found'})
        }
+
+ 
 
       return res.status(200).json({
         status: 'success',
