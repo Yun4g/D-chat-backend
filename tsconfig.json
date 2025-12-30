@@ -1,14 +1,12 @@
 {
   "compilerOptions": {
+    "outDir": "dist",
+    "module": "ESNext",
     "target": "ES2020",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "Node",
     "esModuleInterop": true,
     "strict": true,
-    "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "outDir": "./dist",
-    "rootDir": "./src"
+    "skipLibCheck": true
   },
-  "include": ["src", "src/testSocket.ts"]
+  "include": ["src"]
 }
