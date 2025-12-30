@@ -1,60 +1,54 @@
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 dotenv.config();
-
-import express from "express";
-import cors from "cors";
+import cors from 'cors';
+import express, { Request, Response, NextFunction } from 'express';
+import authRoute from './routes/authRoute.js';
+import chat from './routes/chat.js';
+import FriendsRequest from  './routes/friendRequestRoute.js'
+import { connectDB } from './db/db.js';
 import cookieParser from "cookie-parser";
-import { createServer } from "http";
-
-import authRoute from "./routes/authRoute.js";
-import chat from "./routes/chat.js";
-import FriendsRequest from "./routes/friendRequestRoute.js";
-import notification from "./routes/notification.js";
-
-import { connectDB } from "./db/db.js";
-import { initialSocket } from "./lib/socket.js";
-import { globalErrorHandler } from "./middleware/GlobalError.js";
-import { authMiddleware } from "./middleware/authMiddleware.js";
-
-const app = express();
-const PORT = process.env.PORT || 5000;
-
-
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "https://d-chat-frontend.vercel.app",
-    ],
-    credentials: true,
-  })
-);
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
-
-
-app.use("/api", authRoute);
-app.use("/api", authMiddleware, FriendsRequest);
-app.use("/api", authMiddleware, chat);
-app.use("/api", authMiddleware, notification);
-
-app.get("/", (_req, res) => {
-  res.send("Welcome to D-CHAT Backend");
-});
-
-
-app.use(globalErrorHandler);
-
-
-const httpServer = createServer(app);
-initialSocket(httpServer);
+import { createServer } from 'http';
+import { initialSocket } from './lib/socket.js';
+import { globalErrorHandler } from './middleware/GlobalError.js';
+import { authMiddleware } from './middleware/authMiddleware.js';
+import notification from './routes/notification.js'
+const server = express();
 
 await connectDB();
+server.use(express.json());
 
-httpServer.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+
+server.use(cors({
+  origin: ['http://localhost:5173', 'https://d-chat-frontend.vercel.app'],
+  credentials: true,
+}));
+
+
+const httpServer = createServer(server);
+initialSocket(httpServer)
+
+
+
+server.use(cookieParser())
+const Port = process.env.PORT  || 5000;
+server.use(express.urlencoded({ extended: true }));
+
+
+server.use('/api', authRoute);
+server.use('/api', authMiddleware, FriendsRequest )
+server.use('/api',  authMiddleware,  chat);
+server.use('/api', authMiddleware, notification )
+server.get('/', (req, res) => {
+     res.send('Welcome to D-CHAT Backend')
 });
 
-export default app;
+
+server.use(globalErrorHandler);
+
+httpServer.listen(Port, () => {
+    console.log(`server running succesfully on port ${Port}`)
+})
+export default server;
+
+
+
