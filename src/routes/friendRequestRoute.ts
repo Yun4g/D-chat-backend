@@ -154,8 +154,10 @@ route.get('/getfriends', async(req, res)=> {
         status: 'success',
         users: getOtherUsers
     })
-    
+
     } catch (error) {
        return  res.status(500).send('internal server error')
     }
-})
+});
+
+export default route;
