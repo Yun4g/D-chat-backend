@@ -60,7 +60,8 @@ route.post('/sendRequest', async (req, res) => {
 
         return res.status(200).json({ message: "Request sent Succefully" })
     } catch (error) {
-        res.status(500).send("internal server error")
+        console.log('error from send request',error)
+       return res.status(500).send("internal server error")
     }
 
 });
