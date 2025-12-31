@@ -32,6 +32,21 @@ route.post('/sendRequest', async (req, res) => {
             return res.status(200).send("User not found")
         }
 
+        const existingRequest = await FriendRequestModel.findOne({
+            senderId,
+            receiverId,
+            status: "pending",
+        });
+
+
+
+        if (existingRequest) {
+            return res.status(400).json({
+                message: "Friend request already sent",
+            });
+        }
+
+
         const NewFriendRequest = await FriendRequestModel.create({
             senderId: senderId,
             receiverId: receiverId,
@@ -114,8 +129,8 @@ route.post('/AcceptRequest', async (req, res) => {
 
         return res.status(200).json({ message: "Request Accepted Succefully" });
     } catch (error) {
-        console.log('error from accept request',error)
-       return  res.status(500).send("internal server error");
+        console.log('error from accept request', error)
+        return res.status(500).send("internal server error");
     }
 
 });
