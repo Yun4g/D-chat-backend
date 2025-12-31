@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+
 import { Router } from "express";
 import { UserModel } from "../model/UserScehema.js";
 import FriendRequestModel from "../model/friendRequestModel.js";
@@ -114,7 +114,8 @@ route.post('/AcceptRequest', async (req, res) => {
 
         return res.status(200).json({ message: "Request Accepted Succefully" });
     } catch (error) {
-        res.status(500).send("internal server error");
+        console.log('error from accept request',error)
+       return  res.status(500).send("internal server error");
     }
 
 });
@@ -167,7 +168,6 @@ route.get('/getfriends/:userId', async (req, res) => {
             sentRequestMap[req.receiverId.toString()] = req.status;
         });
 
-        // 2. Get all users except yourself and except users who accepted your request
         const getOtherUsers = await UserModel.find({
             _id: {
                 $ne: userId,
