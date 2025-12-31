@@ -21,7 +21,7 @@ route.post('/sendRequest', async (req, res) => {
     try {
         const io = getIO();
         if (!io) {
-           console.error('error')  
+            console.error('error')
         }
         const getReceiver = await UserModel.findById(receiverId);
         if (!getReceiver) {
@@ -54,14 +54,14 @@ route.post('/sendRequest', async (req, res) => {
         });
 
         await notification.create({
-             userId: receiverId,
-             message: `friend request from ${Sender.userName}` 
+            userId: receiverId,
+            message: `friend request from ${Sender.userName}`
         })
 
         return res.status(200).json({ message: "Request sent Succefully" })
     } catch (error) {
-        console.log('error from send request',error)
-       return res.status(500).send("internal server error")
+        console.log('error from send request', error)
+        return res.status(500).send("internal server error")
     }
 
 });
@@ -100,15 +100,15 @@ route.post('/AcceptRequest', async (req, res) => {
             status: "accepted",
             roomId: uniqueroomId,
         });
-       
-        const AcceptLink =`${process.env.FRONTEND_URL}`;
+
+        const AcceptLink = `${process.env.FRONTEND_URL}`;
         const message = `
            <p>you have accepted a request from ${Sender.userName}</p>
             <p>Click the link below to login to D-chat </p>
            <a href="${AcceptLink}">${AcceptLink}</a>
         `
         await sendFreindRequestEmail(receiverEmail, `you succesfully accepted ${Sender.userName}`, message);
-        
+
         io.to(senderId).emit("friendRequestAccepted", { roomId: uniqueroomId });
         io.to(receiverId).emit("friendRequestAccepted", { roomId: uniqueroomId });
 
@@ -120,7 +120,7 @@ route.post('/AcceptRequest', async (req, res) => {
 });
 
 route.post('/rejectRequest', async (req, res) => {
-    const { senderId, receiverId,  } = req.body;
+    const { senderId, receiverId, } = req.body;
     if (!senderId || !receiverId) {
         return res.status(400).send("senderId  and recieverId")
     };
@@ -149,37 +149,50 @@ route.post('/rejectRequest', async (req, res) => {
 });
 
 route.get('/getfriends/:userId', async (req, res) => {
-  const { userId } = req.params;
+    const { userId } = req.params;
 
-  try {
+    try {
+        const incomingPendingRequests = await FriendRequestModel.find({
+            receiverId: userId,
+            status: "pending",
+        }).select("senderId");
 
-    const sentRequests = await FriendRequestModel.find({ senderId: userId });
-    const sentRequestMap: Record<string, string> = {};
-    sentRequests.forEach(req => {
-      sentRequestMap[req.receiverId.toString()] = req.status; 
-    });
+        const incomingPendingRequestsSenderId = incomingPendingRequests.map(
+            req => req.senderId
+        );
 
-    // 2. Get all users except yourself and except users who accepted your request
-    const getOtherUsers = await UserModel.find({
-      _id: { $ne: userId },
-    });
+        const sentRequests = await FriendRequestModel.find({ senderId: userId });
+        const sentRequestMap: Record<string, string> = {};
+        sentRequests.forEach(req => {
+            sentRequestMap[req.receiverId.toString()] = req.status;
+        });
 
-    // 3. Map the friend request status for each user
-    const usersWithStatus = getOtherUsers.map(user => {
-      return {
-        ...user.toObject(),
-        requestStatus: sentRequestMap[user._id.toString()] || "none",
-      };
-    });
+        // 2. Get all users except yourself and except users who accepted your request
+        const getOtherUsers = await UserModel.find({
+            _id: {
+                $ne: userId,
+                $nin: incomingPendingRequestsSenderId
+            },
+        });
 
-    return res.status(200).json({
-      status: "success",
-      users: usersWithStatus,
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send("internal server error");
-  }
+        // 3. Map the friend request status for each user
+        const usersWithStatus = getOtherUsers.map(user => {
+            return {
+                ...user.toObject(),
+                requestStatus: sentRequestMap[user._id.toString()] || "none",
+            };
+        });
+
+
+
+        return res.status(200).json({
+            status: "success",
+            users: usersWithStatus,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send("internal server error");
+    }
 });
 
 
