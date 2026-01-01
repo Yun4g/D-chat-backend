@@ -56,12 +56,13 @@ route.post('/sendRequest', async (req, res) => {
 
         const RequestLink = `${process.env.FRONTEND_URL}`;
         const message = `
-        <p>you have a request from ${senderId}</p>
+        <p>you have a request from ${Sender.userName}</p>
           <p>Click the link below to login to D-chat </p>
            <a href="${RequestLink}">${RequestLink}</a>
         `
-        await sendFreindRequestEmail(receiverEmail, `Freind Request ${senderId}`, message);
+        await sendFreindRequestEmail(receiverEmail, `Freind Request ${Sender.userName}`, message);
 
+        
 
         io.to(receiverId).emit('notification', {
             requestId: FriendRequest._id,
