@@ -1,5 +1,5 @@
 
-import { Router } from "express";
+import { Request, Response, Router } from "express";
 import { UserModel } from "../model/UserScehema.js";
 import FriendRequestModel from "../model/friendRequestModel.js";
 import { sendFreindRequestEmail } from "../utils/sendEmail.js";
@@ -62,7 +62,7 @@ route.post('/sendRequest', async (req, res) => {
         `
         await sendFreindRequestEmail(receiverEmail, `Freind Request ${Sender.userName}`, message);
 
-        
+
 
         io.to(receiverId).emit('notification', {
             requestId: FriendRequest._id,
@@ -83,13 +83,13 @@ route.post('/sendRequest', async (req, res) => {
 });
 
 route.post('/AcceptRequest', async (req, res) => {
-    const { senderId, receiverId, receiverEmail, } = req.body;
-    if (!senderId || !receiverId) {
+    const { senderId, userId, receiverEmail, } = req.body;
+    if (!senderId || !userId) {
         return res.status(400).send("senderId  and recieverId")
     };
     try {
         const io = getIO();
-        const getReceiver = await UserModel.findById(receiverId);
+        const getReceiver = await UserModel.findById(userId);
         if (!getReceiver) {
             return res.status(200).send("User not found")
         }
@@ -99,7 +99,7 @@ route.post('/AcceptRequest', async (req, res) => {
         }
 
         const updateFriendReq = await FriendRequestModel.findOneAndUpdate(
-            { senderId, receiverId, status: "pending" },
+            { senderId, userId, status: "pending" },
             { status: "accepted" },
             { new: true }
         );
@@ -112,7 +112,7 @@ route.post('/AcceptRequest', async (req, res) => {
 
         await Freinds.create({
             senderId: senderId,
-            receiverId: receiverId,
+            receiverId: userId,
             status: "accepted",
             roomId: uniqueroomId,
         });
@@ -126,7 +126,7 @@ route.post('/AcceptRequest', async (req, res) => {
         await sendFreindRequestEmail(receiverEmail, `you succesfully accepted ${Sender.userName}`, message);
 
         io.to(senderId).emit("friendRequestAccepted", { roomId: uniqueroomId });
-        io.to(receiverId).emit("friendRequestAccepted", { roomId: uniqueroomId });
+        io.to(userId).emit("friendRequestAccepted", { roomId: uniqueroomId });
 
         return res.status(200).json({ message: "Request Accepted Succefully" });
     } catch (error) {
@@ -210,6 +210,58 @@ route.get('/getfriends/:userId', async (req, res) => {
         return res.status(500).send("internal server error");
     }
 });
+
+
+//  get all request that is pending where i am the receiver 
+
+route.get('/getRequest/:userId', async (req: Request, res: Response) => {
+    const { userId } = req.params;
+
+    try {
+        const FindUser = await UserModel.findById(userId);
+        if (!FindUser) {
+            return res.status(404).json({ message: "User not found" });
+
+        }
+
+        const PendingRequest = await FriendRequestModel.find({
+            receiverId: userId,
+            status: "pending",
+        }).select("senderId");
+
+        if (PendingRequest.length == 0) {
+          return  res.status(200).json({
+                status: "success",
+                message: "Request successful",
+                senderRequest: []
+            })
+        }
+
+        const SenderId = PendingRequest.map(req => req.senderId)
+
+        //  get sender details and send senderId and
+        const getSenderIdDetails = await UserModel.find({
+            _id: { $in: SenderId },
+        }).select("-password");
+
+        const payload = getSenderIdDetails.map(sender => ({
+            id: sender._id,
+            name: sender.userName,
+            email: sender.email,
+            avatarUrl: sender.avatarUrl,
+        }));
+
+
+        return res.status(200).json({
+            status: "success",
+            message: "Request successful",
+            senderRequest: payload
+        });
+    } catch (error) {
+        console.log('getRequest', error);
+        return res.status(500).send("internal server error");
+    }
+})
 
 
 export default route;
