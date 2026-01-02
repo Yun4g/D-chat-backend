@@ -12,6 +12,8 @@ import { initialSocket } from './lib/socket.js';
 import { globalErrorHandler } from './middleware/GlobalError.js';
 import { authMiddleware } from './middleware/authMiddleware.js';
 import notification from './routes/notification.js'
+import FriendsRequest from  './routes/friendRequestRoute.js'
+
 const server = express();
 
 
@@ -34,13 +36,17 @@ server.use(cookieParser())
 const Port = process.env.PORT  || 5000;
 server.use(express.urlencoded({ extended: true }));
 
-import FriendsRequest from  './routes/friendRequestRoute.js'
+
 server.use('/api', authRoute);
 server.use('/api', authMiddleware, FriendsRequest )
 server.use('/api',  authMiddleware,  chat);
 server.use('/api', authMiddleware, notification )
 server.get('/', (req, res) => {
      res.send('Welcome to D-CHAT Backend')
+});
+
+server.get("/test", (req, res) => {
+  res.send("Latest code is running");
 });
 
 
