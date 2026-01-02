@@ -12,14 +12,14 @@ route.get("/notification/:userId", async (req, res) => {
     const getUser = await UserModel.findById(userId);
 
     if (!getUser) {
-       return res.status(404).json({message: 'user not found'});
+      return res.status(404).json({ message: 'user not found' });
     }
-
 
     const notifications = await Notification.find({ userId });
 
+
     return res.status(200).json({
-      notifications,
+      notifications: notifications || [],
     });
 
   } catch (error) {
