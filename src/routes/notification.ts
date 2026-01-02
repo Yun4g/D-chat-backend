@@ -27,3 +27,6 @@ route.get("/notification/:userId", async (req, res) => {
     });
   }
 });
+
+
+export default route
