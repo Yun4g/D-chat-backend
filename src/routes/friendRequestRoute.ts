@@ -91,7 +91,7 @@ route.post('/sendRequest', async (req, res) => {
 route.post('/AcceptRequest', async (req, res) => {
     const { senderId, userId, receiverEmail, } = req.body;
     if (!senderId || !userId) {
-        return res.status(400).send("senderId  and recieverId")
+        return res.status(400).send("senderId  and recieverId is required ")
     };
     try {
         const io = getIO();
