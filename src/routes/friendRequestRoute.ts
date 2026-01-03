@@ -89,13 +89,13 @@ route.post('/sendRequest', async (req, res) => {
 });
 
 route.post('/AcceptRequest', async (req, res) => {
-    const { senderId, userId, receiverEmail, } = req.body;
-    if (!senderId || !userId) {
+    const { senderId, receiverId, receiverEmail, } = req.body;
+    if (!senderId || !receiverId) {
         return res.status(400).send("senderId  and userId is required ")
     };
     try {
         const io = getIO();
-        const getReceiver = await UserModel.findById(userId);
+        const getReceiver = await UserModel.findById(receiverId);
         if (!getReceiver) {
             return res.status(200).send("User not found")
         }
@@ -105,7 +105,7 @@ route.post('/AcceptRequest', async (req, res) => {
         }
 
         const updateFriendReq = await FriendRequestModel.findOneAndUpdate(
-            { senderId, userId, status: "pending" },
+            { senderId, receiverId, status: "pending" },
             { status: "accepted" },
             { new: true }
         );
@@ -118,7 +118,7 @@ route.post('/AcceptRequest', async (req, res) => {
 
         await Freinds.create({
             senderId: senderId,
-            userId: userId,
+            userId: receiverId,
             status: "accepted",
             roomId: uniqueroomId,
         });
@@ -132,7 +132,7 @@ route.post('/AcceptRequest', async (req, res) => {
         await sendFreindRequestEmail(receiverEmail, `you succesfully accepted ${Sender.userName}`, message);
 
         io.to(senderId).emit("friendRequestAccepted", { roomId: uniqueroomId });
-        io.to(userId).emit("friendRequestAccepted", { roomId: uniqueroomId });
+        io.to(receiverId).emit("friendRequestAccepted", { roomId: uniqueroomId });
 
         return res.status(200).json({ message: "Request Accepted Succefully" });
     } catch (error) {
@@ -226,7 +226,7 @@ const getFriendsId = async (Id: string): Promise<string[]> => {
         $or: [{ senderId: Id }, { receiverId: Id }],
     });
 
-    return friends.map(f => f.senderId.toString() === Id ? f.receiverId.toString() : f.senderId.toString()
+    return friends.map(f => f.senderId.toString() === Id ? f.userId.toString() : f.senderId.toString()
     );
 };
 

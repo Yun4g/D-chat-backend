@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 
 interface FriendsType {
     senderId: string;
-    receiverId: string;
+    userId: string;
     status: 'accepted' | 'pending' | 'rejected';
     roomId: string
     createdAt: Date;
@@ -13,7 +13,7 @@ interface FriendsType {
 
 const FriendsSchema = new mongoose.Schema<FriendsType>({
     senderId: { type: String, required: true },
-    receiverId: { type: String, required: true },
+    userId: { type: String, required: true },
     status: { type: String, enum: ["pending", "accepted", "rejected"], },
     roomId: { type: String, },
     createdAt: { type: Date, default: Date.now },
