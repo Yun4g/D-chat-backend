@@ -244,6 +244,13 @@ route.get('/getRequest/:userId', async (req: Request, res: Response) => {
             _id: { $in: SenderId },
         }).select("-password");
 
+         const getSenderFriends = await Freinds.find({
+             status: 'accepted',
+             $or: [
+                 {senderId:userId},
+                 {receiverId: userId}
+             ]
+         })
         const payload = getSenderIdDetails.map(sender => ({
             id: sender._id,
             name: sender.userName,
