@@ -118,7 +118,7 @@ route.post('/AcceptRequest', async (req, res) => {
 
         await Freinds.create({
             senderId: senderId,
-            receiverId: userId,
+            userId: userId,
             status: "accepted",
             roomId: uniqueroomId,
         });
