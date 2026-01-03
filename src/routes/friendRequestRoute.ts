@@ -89,7 +89,7 @@ route.post('/sendRequest', async (req, res) => {
 });
 
 route.post('/AcceptRequest', async (req, res) => {
-    const { senderId, receiverId, receiverEmail, } = req.body;
+    const { senderId, receiverId, recieverEmail } = req.body;
     if (!senderId || !receiverId) {
         return res.status(400).send("senderId  and receiverId is required ")
     };
@@ -129,7 +129,7 @@ route.post('/AcceptRequest', async (req, res) => {
             <p>Click the link below to login to D-chat </p>
            <a href="${AcceptLink}">${AcceptLink}</a>
         `
-        await sendFreindRequestEmail(receiverEmail, `you succesfully accepted ${Sender.userName}`, message);
+        await sendFreindRequestEmail(recieverEmail, `you succesfully accepted ${Sender.userName}`, message);
 
         io.to(senderId).emit("friendRequestAccepted", { roomId: uniqueroomId });
         io.to(receiverId).emit("friendRequestAccepted", { roomId: uniqueroomId });
@@ -137,7 +137,7 @@ route.post('/AcceptRequest', async (req, res) => {
         return res.status(200).json({ message: "Request Accepted Succefully" });
     } catch (error) {
         console.log('error from accept request', error)
-        return res.status(500).send("internal server error");
+        return res.status(500).send("Internal server error");
     }
 
 });
