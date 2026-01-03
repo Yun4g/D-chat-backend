@@ -91,7 +91,7 @@ route.post('/sendRequest', async (req, res) => {
 route.post('/AcceptRequest', async (req, res) => {
     const { senderId, receiverId, receiverEmail, } = req.body;
     if (!senderId || !receiverId) {
-        return res.status(400).send("senderId  and userId is required ")
+        return res.status(400).send("senderId  and receiverId is required ")
     };
     try {
         const io = getIO();
@@ -118,7 +118,7 @@ route.post('/AcceptRequest', async (req, res) => {
 
         await Freinds.create({
             senderId: senderId,
-            userId: receiverId,
+            receiverId: receiverId,
             status: "accepted",
             roomId: uniqueroomId,
         });
