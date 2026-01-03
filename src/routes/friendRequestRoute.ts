@@ -11,7 +11,13 @@ import notification from '../model/notification.js';
 
 const route = Router();
 
-
+interface PayloadTypes {
+    id: string,
+    name: string,
+    email: string,
+    avatarUrl?: string,
+     mutualFriendsCount: number,
+}
 
 route.post('/sendRequest', async (req, res) => {
     const { senderId, receiverId, receiverEmail, } = req.body;
@@ -214,6 +220,18 @@ route.get('/getfriends/:userId', async (req, res) => {
 
 //  get all request that is pending where i am the receiver 
 
+const getFriendsId = async (Id: string): Promise<string[]> => {
+    const friends = await Freinds.find({
+        status: "accepted",
+        $or: [{ senderId: Id }, { receiverId: Id }],
+    });
+
+    return friends.map(f => f.senderId.toString() === Id ? f.receiverId.toString() : f.senderId.toString()
+    );
+};
+
+
+
 route.get('/getRequest/:userId', async (req: Request, res: Response) => {
     const { userId } = req.params;
 
@@ -230,7 +248,7 @@ route.get('/getRequest/:userId', async (req: Request, res: Response) => {
         }).select("senderId");
 
         if (PendingRequest.length == 0) {
-          return  res.status(200).json({
+            return res.status(200).json({
                 status: "success",
                 message: "Request successful",
                 senderRequest: []
@@ -244,20 +262,27 @@ route.get('/getRequest/:userId', async (req: Request, res: Response) => {
             _id: { $in: SenderId },
         }).select("-password");
 
-         const getSenderFriends = await Freinds.find({
-             status: 'accepted',
-             $or: [
-                 {senderId:userId},
-                 {receiverId: userId}
-             ]
-         })
-        const payload = getSenderIdDetails.map(sender => ({
-            id: sender._id,
+
+        const receiverFriendId = await getFriendsId(userId);
+
+
+        const payload: PayloadTypes[] = [];
+
+        for (const sender of getSenderIdDetails) {
+            const senderFriendId = await getFriendsId(sender._id.toString());
+           const senderId = sender._id.toString()
+            const mutualFriendsCount = senderFriendId.filter(id =>
+                receiverFriendId.includes(id)
+            ).length;
+
+            payload.push({
+            id: senderId,
             name: sender.userName,
             email: sender.email,
             avatarUrl: sender.avatarUrl,
-        }));
-
+            mutualFriendsCount
+            })
+        }
 
         return res.status(200).json({
             status: "success",
