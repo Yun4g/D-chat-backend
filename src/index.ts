@@ -22,6 +22,8 @@ server.use(express.json());
 
 server.use(cors({
   origin: ['http://localhost:5173', 'https://d-chat-frontend.vercel.app'],
+   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 }));
 
