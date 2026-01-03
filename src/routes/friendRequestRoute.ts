@@ -223,10 +223,10 @@ route.get('/getfriends/:userId', async (req, res) => {
 const getFriendsId = async (Id: string): Promise<string[]> => {
     const friends = await Freinds.find({
         status: "accepted",
-        $or: [{ senderId: Id }, { userId: Id }],
+        $or: [{ senderId: Id }, { receiverId: Id }],
     });
 
-    return friends.map(f => f.senderId.toString() === Id ? f.userId.toString() : f.senderId.toString()
+    return friends.map(f => f.senderId.toString() === Id ? f.receiverId.toString() : f.senderId.toString()
     );
 };
 
