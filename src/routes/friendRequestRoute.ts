@@ -39,8 +39,8 @@ route.post('/sendRequest', async (req, res) => {
         }
 
         const existingRequest = await FriendRequestModel.findOne({
-            senderId,
-            receiverId,
+          senderId :  senderId,
+          receiverId: receiverId,
             status: "pending",
         });
 
@@ -58,6 +58,7 @@ route.post('/sendRequest', async (req, res) => {
             receiverId: receiverId,
             status: "pending"
         });
+
         const FriendRequest = await NewFriendRequest.save();
 
         const RequestLink = `${process.env.FRONTEND_URL}`;
@@ -171,48 +172,55 @@ route.post('/rejectRequest', async (req, res) => {
 
 });
 
-route.get('/getfriends/:userId', async (req, res) => {
+route.get('/getfriends/:userId', async (req: Request, res: Response) => {
     const { userId } = req.params;
 
     try {
+        // 1️⃣ Users who sent you a pending request
         const incomingPendingRequests = await FriendRequestModel.find({
             receiverId: userId,
             status: "pending",
         }).select("senderId");
+        const incomingPendingRequestsSenderId = incomingPendingRequests.map(req => req.senderId);
 
-        const incomingPendingRequestsSenderId = incomingPendingRequests.map(
-            req => req.senderId
-        );
+        // 2️⃣ Users you have sent a pending request to
+        const sentPendingRequests = await FriendRequestModel.find({
+            senderId: userId,
+            status: "pending"
+        }).select("receiverId");
+        const sentPendingRequestReceiverIds = sentPendingRequests.map(req => req.receiverId);
 
-        const sentRequests = await FriendRequestModel.find({ senderId: userId });
-        const sentRequestMap: Record<string, string> = {};
-        sentRequests.forEach(req => {
-            sentRequestMap[req.receiverId.toString()] = req.status;
-        });
-
+        // 3️⃣ Fetch all other users excluding:
+        //     - Yourself
+        //     - Users who sent you a request
+        //     - Users you already sent a request to
         const getOtherUsers = await UserModel.find({
             _id: {
                 $ne: userId,
-                $nin: incomingPendingRequestsSenderId
+                $nin: [...incomingPendingRequestsSenderId, ...sentPendingRequestReceiverIds]
             },
         });
 
-        // 3. Map the friend request status for each user
+        // 4️⃣ Map friend request status for users you already sent requests to
+        const sentRequestMap: Record<string, string> = {};
+        sentPendingRequests.forEach(req => {
+            sentRequestMap[req.receiverId.toString()] = req.status; // pending
+        });
+
+        // 5️⃣ Build final users list with requestStatus
         const usersWithStatus = getOtherUsers.map(user => {
             return {
                 ...user.toObject(),
-                requestStatus: sentRequestMap[user._id.toString()] || "none",
+                requestStatus: sentRequestMap[user._id.toString()] || "none", // "none" if no request sent
             };
         });
-
-
 
         return res.status(200).json({
             status: "success",
             users: usersWithStatus,
         });
     } catch (error) {
-        console.error(error);
+        console.error('getfriends error:', error);
         return res.status(500).send("internal server error");
     }
 });
