@@ -29,19 +29,26 @@ route.post('/sendRequest', async (req, res) => {
         if (!io) {
             console.error('error')
         }
+
+         if (senderId == receiverId) {
+            return res.status(400).json({message: "oops You can not send a request to your self"})
+         }
+
+
         const getReceiver = await UserModel.findById(receiverId);
         if (!getReceiver) {
-            return res.status(200).send("User not found")
+            return res.status(404).send("User not found")
         }
         const Sender = await UserModel.findById(senderId);
         if (!Sender) {
-            return res.status(200).send("User not found")
+            return res.status(404).send("User not found")
         }
 
         const existingRequest = await FriendRequestModel.findOne({
+            status: "pending",
             $or: [
-                { senderId, receiverId, status: "pending" },
-                { senderId: receiverId, receiverId: senderId, status: "pending" }
+                { senderId: senderId, receiverId: receiverId },
+                { senderId: receiverId, receiverId: senderId }
             ]
         });
 
@@ -189,6 +196,14 @@ route.get('/getfriends/:userId', async (req: Request, res: Response) => {
             senderId: userId,
             status: "pending"
         }).select("receiverId");
+
+
+
+
+
+
+
+
         const sentPendingRequestReceiverIds = sentPendingRequests.map(req => req.receiverId);
 
         // 3️⃣ Fetch all other users excluding:
