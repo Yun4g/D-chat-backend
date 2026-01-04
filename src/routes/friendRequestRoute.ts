@@ -30,9 +30,9 @@ route.post('/sendRequest', async (req, res) => {
             console.error('error')
         }
 
-         if (senderId == receiverId) {
-            return res.status(400).json({message: "oops You can not send a request to your self"})
-         }
+        if (senderId == receiverId) {
+            return res.status(400).json({ message: "oops You can not send a request to your self" })
+        }
 
 
         const getReceiver = await UserModel.findById(receiverId);
@@ -79,8 +79,14 @@ route.post('/sendRequest', async (req, res) => {
 
         io.to(receiverId).emit('FriendRequest', {
             senderId,
+            receiverId,
             status: 'pending'
         })
+        io.to(senderId).emit('FriendRequest', {
+            senderId,
+            receiverId,
+            status: 'pending'
+        });
 
         io.to(receiverId).emit('notification', {
             requestId: FriendRequest._id,
@@ -143,8 +149,8 @@ route.post('/AcceptRequest', async (req, res) => {
         `
         await sendFreindRequestEmail(recieverEmail, `you succesfully accepted ${Sender.userName}`, message);
 
-        io.to(senderId).emit("friendRequestAccepted", { roomId: uniqueroomId });
-        io.to(receiverId).emit("friendRequestAccepted", { roomId: uniqueroomId });
+        io.to(senderId).emit("friendRequestAccepted", { senderId: receiverId, roomId: uniqueroomId });
+        io.to(receiverId).emit("friendRequestAccepted", { senderId: senderId, roomId: uniqueroomId });
 
         return res.status(200).json({ message: "Request Accepted Succefully" });
     } catch (error) {
@@ -178,16 +184,18 @@ route.post('/rejectRequest', async (req, res) => {
             return res.status(404).json({ message: "Friend request not found" });
         }
 
-        io.to(receiverId).emit('FriendRequest', {
-            senderId,
-            status: 'rejected'
-        });
-
-        
         io.to(senderId).emit('FriendRequest', {
             receiverId,
             status: 'rejected'
-        })
+        });
+
+
+        io.to(senderId).emit('FriendRequest', {
+            receiverId,
+            status: 'rejected'
+        });
+
+
         return res.status(200).json({ message: "Request Rejected Succefully" })
     } catch (error) {
         res.status(500).send("internal server error");
