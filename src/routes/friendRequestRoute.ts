@@ -77,7 +77,10 @@ route.post('/sendRequest', async (req, res) => {
         `
         await sendFreindRequestEmail(receiverEmail, `Freind Request ${Sender.userName}`, message);
 
-        io.to(receiverId).emit('FriendRequest', {senderId})
+        io.to(receiverId).emit('FriendRequest', {
+            senderId,
+            status: 'pending'
+        })
 
         io.to(receiverId).emit('notification', {
             requestId: FriendRequest._id,
@@ -152,6 +155,7 @@ route.post('/AcceptRequest', async (req, res) => {
 });
 
 route.post('/rejectRequest', async (req, res) => {
+    const io = getIO()
     const { senderId, receiverId, } = req.body;
     if (!senderId || !receiverId) {
         return res.status(400).send("senderId  and recieverId")
@@ -173,6 +177,17 @@ route.post('/rejectRequest', async (req, res) => {
         if (!updateFriendReq) {
             return res.status(404).json({ message: "Friend request not found" });
         }
+
+        io.to(receiverId).emit('FriendRequest', {
+            senderId,
+            status: 'rejected'
+        });
+
+        
+        io.to(senderId).emit('FriendRequest', {
+            receiverId,
+            status: 'rejected'
+        })
         return res.status(200).json({ message: "Request Rejected Succefully" })
     } catch (error) {
         res.status(500).send("internal server error");
