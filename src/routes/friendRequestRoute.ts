@@ -77,7 +77,7 @@ route.post('/sendRequest', async (req, res) => {
         `
         await sendFreindRequestEmail(receiverEmail, `Freind Request ${Sender.userName}`, message);
 
-
+        io.to(receiverId).emit('FriendRequest', {senderId})
 
         io.to(receiverId).emit('notification', {
             requestId: FriendRequest._id,
