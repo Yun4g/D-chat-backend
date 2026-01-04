@@ -16,7 +16,7 @@ interface PayloadTypes {
     name: string,
     email: string,
     avatarUrl?: string,
-     mutualFriendsCount: number,
+    mutualFriendsCount: number,
 }
 
 route.post('/sendRequest', async (req, res) => {
@@ -39,9 +39,10 @@ route.post('/sendRequest', async (req, res) => {
         }
 
         const existingRequest = await FriendRequestModel.findOne({
-          senderId :  senderId,
-          receiverId: receiverId,
-            status: "pending",
+            $or: [
+                { senderId, receiverId, status: "pending" },
+                { senderId: receiverId, receiverId: senderId, status: "pending" }
+            ]
         });
 
 
@@ -278,17 +279,17 @@ route.get('/getRequest/:userId', async (req: Request, res: Response) => {
 
         for (const sender of getSenderIdDetails) {
             const senderFriendId = await getFriendsId(sender._id.toString());
-           const senderId = sender._id.toString()
+            const senderId = sender._id.toString()
             const mutualFriendsCount = senderFriendId.filter(id =>
                 receiverFriendId.includes(id)
             ).length;
 
             payload.push({
-            id: senderId,
-            name: sender.userName,
-            email: sender.email,
-            avatarUrl: sender.avatarUrl,
-            mutualFriendsCount
+                id: senderId,
+                name: sender.userName,
+                email: sender.email,
+                avatarUrl: sender.avatarUrl,
+                mutualFriendsCount
             })
         }
 
