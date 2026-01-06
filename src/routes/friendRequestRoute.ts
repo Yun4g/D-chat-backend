@@ -96,7 +96,7 @@ route.post('/sendRequest', async (req, res) => {
         await notification.create({
             userId: receiverId,
             message: `friend request from ${Sender.userName}`
-        })
+        });
 
         return res.status(200).json({ message: "Request sent Succefully" })
     } catch (error) {
@@ -207,32 +207,21 @@ route.get('/getfriends/:userId', async (req: Request, res: Response) => {
     const { userId } = req.params;
 
     try {
-        // 1️⃣ Users who sent you a pending request
+       
         const incomingPendingRequests = await FriendRequestModel.find({
             receiverId: userId,
             status: "pending",
         }).select("senderId");
         const incomingPendingRequestsSenderId = incomingPendingRequests.map(req => req.senderId);
 
-        // 2️⃣ Users you have sent a pending request to
         const sentPendingRequests = await FriendRequestModel.find({
             senderId: userId,
             status: "pending"
         }).select("receiverId");
 
-
-
-
-
-
-
-
         const sentPendingRequestReceiverIds = sentPendingRequests.map(req => req.receiverId);
 
-        // 3️⃣ Fetch all other users excluding:
-        //     - Yourself
-        //     - Users who sent you a request
-        //     - Users you already sent a request to
+    
         const getOtherUsers = await UserModel.find({
             _id: {
                 $ne: userId,
@@ -240,17 +229,17 @@ route.get('/getfriends/:userId', async (req: Request, res: Response) => {
             },
         });
 
-        // 4️⃣ Map friend request status for users you already sent requests to
+
         const sentRequestMap: Record<string, string> = {};
         sentPendingRequests.forEach(req => {
             sentRequestMap[req.receiverId.toString()] = req.status; // pending
         });
 
-        // 5️⃣ Build final users list with requestStatus
+     
         const usersWithStatus = getOtherUsers.map(user => {
             return {
                 ...user.toObject(),
-                requestStatus: sentRequestMap[user._id.toString()] || "none", // "none" if no request sent
+                requestStatus: sentRequestMap[user._id.toString()] || "none", 
             };
         });
 

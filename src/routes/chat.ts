@@ -21,8 +21,8 @@ route.get('/friendsList/:userId', async (req, res) => {
          const friends = await Freinds.find({
         status: "accepted",
         $or: [
-            { sender: userId },
-            { receiver: userId }
+            { senderId: userId },
+            { receiverId: userId }
         ]
     });
       if (friends.length === 0) {
