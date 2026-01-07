@@ -62,7 +62,7 @@ route.get('/friendsList/:userId', async (req, res) => {
 
 });
 
-route.post('/chatHistroy/', async (req, res) => {
+route.post('/chatHistroy', async (req, res) => {
     const { roomId } = req.body;
      if (!roomId) {
         return res.status(400).send("roomId is required");

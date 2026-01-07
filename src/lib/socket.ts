@@ -9,7 +9,7 @@ export const initialSocket = (server: HttpServer): Server => {
 
   io = new Server(server, {
     cors: {
-      origin: process.env.FRONTEND_URL,
+      origin: "*",
       methods: ["GET", "POST"],
     },
   });
@@ -29,13 +29,14 @@ export const initialSocket = (server: HttpServer): Server => {
    );
 
    socket.on("sendMessage", async(data: { roomId: string; message: string; senderId: string }) => {
-        const { roomId, message, senderId } = data;
-          await MessageModel.create({
-            message,
-            sender: senderId,
-            roomId
-        });
-        io?.to(roomId).emit("receiveMessage", { message, senderId });
+         console.log("Server received:", data);   
+          const { roomId, message, senderId } = data;
+              await MessageModel.create({
+                message,
+                sender: senderId,
+                roomId
+             });
+           io?.to(roomId).emit("receiveMessage", { message, senderId });
      }
   )
 

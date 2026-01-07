@@ -113,6 +113,20 @@ route.post('/AcceptRequest', async (req, res) => {
     };
     try {
         const io = getIO();
+
+        const existingFriend = await Freinds.findOne({
+            status: "accepted",
+            $or: [
+                { senderId, receiverId },
+                { senderId: receiverId, receiverId: senderId },
+            ],
+        });
+
+        if (existingFriend) {
+            return res.status(400).json({
+                message: "You are already friends with this user",
+            });
+        }
         const getReceiver = await UserModel.findById(receiverId);
         if (!getReceiver) {
             return res.status(200).send("User not found")
@@ -122,6 +136,8 @@ route.post('/AcceptRequest', async (req, res) => {
             return res.status(200).send("User not found")
         }
 
+
+
         const updateFriendReq = await FriendRequestModel.findOneAndUpdate(
             { senderId, receiverId, status: "pending" },
             { status: "accepted" },
@@ -130,7 +146,8 @@ route.post('/AcceptRequest', async (req, res) => {
 
         if (!updateFriendReq) {
             return res.status(404).json({ message: "Friend request not found" });
-        }
+        };
+
 
         const uniqueroomId = uuidv4();
 
@@ -153,9 +170,9 @@ route.post('/AcceptRequest', async (req, res) => {
         io.to(receiverId).emit("friendRequestAccepted", { senderId: senderId, roomId: uniqueroomId });
 
         return res.status(200).json({
-             message: "Request Accepted Succefully",
-             roomId: uniqueroomId 
-         });
+            message: "Request Accepted Succefully",
+            roomId: uniqueroomId
+        });
     } catch (error) {
         console.log('error from accept request', error)
         return res.status(500).send("Internal server error");
@@ -210,7 +227,7 @@ route.get('/getfriends/:userId', async (req: Request, res: Response) => {
     const { userId } = req.params;
 
     try {
-       
+
         const incomingPendingRequests = await FriendRequestModel.find({
             receiverId: userId,
             status: "pending",
@@ -224,12 +241,28 @@ route.get('/getfriends/:userId', async (req: Request, res: Response) => {
 
         const sentPendingRequestReceiverIds = sentPendingRequests.map(req => req.receiverId);
 
-    
+        const friends = await Freinds.find({
+            status: "accepted",
+            $or: [
+                { senderId: userId },
+                { receiverId: userId },
+            ],
+        }).select("senderId receiverId");
+
+        const friendIds = friends.map(f => f.senderId.toString() === userId ? f.receiverId : f.senderId
+        );
+
+        const excludedUserIds = [
+            ...incomingPendingRequestsSenderId,
+            ...sentPendingRequestReceiverIds,
+            ...friendIds,
+        ];
+
         const getOtherUsers = await UserModel.find({
             _id: {
                 $ne: userId,
-                $nin: [...incomingPendingRequestsSenderId, ...sentPendingRequestReceiverIds]
-            },
+                $nin: excludedUserIds,           
+             },
         });
 
 
@@ -238,11 +271,11 @@ route.get('/getfriends/:userId', async (req: Request, res: Response) => {
             sentRequestMap[req.receiverId.toString()] = req.status; // pending
         });
 
-     
+
         const usersWithStatus = getOtherUsers.map(user => {
             return {
                 ...user.toObject(),
-                requestStatus: sentRequestMap[user._id.toString()] || "none", 
+                requestStatus: sentRequestMap[user._id.toString()] || "none",
             };
         });
 
@@ -286,6 +319,7 @@ route.get('/getRequest/:userId', async (req: Request, res: Response) => {
             status: "pending",
         }).select("senderId");
 
+
         if (PendingRequest.length == 0) {
             return res.status(200).json({
                 status: "success",
@@ -293,6 +327,8 @@ route.get('/getRequest/:userId', async (req: Request, res: Response) => {
                 senderRequest: []
             })
         }
+
+        
 
         const SenderId = PendingRequest.map(req => req.senderId)
 

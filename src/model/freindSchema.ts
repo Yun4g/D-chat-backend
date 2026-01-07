@@ -24,12 +24,3 @@ const FriendsSchema = new mongoose.Schema<FriendsType>({
 const Freinds = mongoose.model<FriendsType>("friends", FriendsSchema);
 
 export default Freinds;
-
-// const friends = await Friends.find({
-//     status: "accepted",
-//     $or: [
-//         { sender: userId },
-//         { receiver: userId }
-//     ]
-// });
-
