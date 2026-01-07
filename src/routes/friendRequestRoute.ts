@@ -52,14 +52,27 @@ route.post('/sendRequest', async (req, res) => {
             ]
         });
 
-
-
+        
         if (existingRequest) {
             return res.status(400).json({
                 message: "Friend request already sent",
             });
         }
 
+
+        const existingFriend = await Freinds.findOne({
+            status: "accepted",
+            $or: [
+                { senderId: senderId, receiverId: receiverId },
+                { senderId: receiverId, receiverId: senderId },
+            ]
+        });
+
+        if (existingFriend) {
+            return res.status(400).json({ message: "Friend already exists" });
+        }
+
+       
 
         const NewFriendRequest = await FriendRequestModel.create({
             senderId: senderId,
@@ -261,8 +274,8 @@ route.get('/getfriends/:userId', async (req: Request, res: Response) => {
         const getOtherUsers = await UserModel.find({
             _id: {
                 $ne: userId,
-                $nin: excludedUserIds,           
-             },
+                $nin: excludedUserIds,
+            },
         });
 
 
@@ -328,7 +341,7 @@ route.get('/getRequest/:userId', async (req: Request, res: Response) => {
             })
         }
 
-        
+
 
         const SenderId = PendingRequest.map(req => req.senderId)
 
