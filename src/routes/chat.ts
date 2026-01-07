@@ -29,13 +29,26 @@ route.get('/friendsList/:userId', async (req, res) => {
         return res.status(200).json({ message: "No friends found", friends: [] });
       }
 
-      const friendsid = friends.map(friend => friend.senderId === userId ? friend.receiverId : friend.senderId);
-     const getFriends = await UserModel.find({ _id: { $in: friendsid } });
+       
+    const  friendsWithrooms = await Promise.all(
+        friends.map(async (freindShip) => {
+            const friendsId = freindShip.senderId.toString() === userId ? freindShip.receiverId : freindShip.senderId;
+
+            const getFriendsDetails = await UserModel.findById(friendsId);
+            
+
+            return {
+                user: getFriendsDetails,
+                roomId: freindShip.roomId
+            }
+            
+        })
+    )
 
 
       res.status(200).json({ 
-         friends: getFriends,
          message: "Friends retrieved successfully",
+         friends: friendsWithrooms
        });
 
 
@@ -49,8 +62,8 @@ route.get('/friendsList/:userId', async (req, res) => {
 
 });
 
-route.get('/chatHistroy/:roomId', async (req, res) => {
-    const { roomId } = req.params;
+route.post('/chatHistroy/', async (req, res) => {
+    const { roomId } = req.body;
      if (!roomId) {
         return res.status(400).send("roomId is required");
     }   
