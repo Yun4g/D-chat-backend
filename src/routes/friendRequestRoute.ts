@@ -152,7 +152,10 @@ route.post('/AcceptRequest', async (req, res) => {
         io.to(senderId).emit("friendRequestAccepted", { senderId: receiverId, roomId: uniqueroomId });
         io.to(receiverId).emit("friendRequestAccepted", { senderId: senderId, roomId: uniqueroomId });
 
-        return res.status(200).json({ message: "Request Accepted Succefully" });
+        return res.status(200).json({
+             message: "Request Accepted Succefully",
+             roomId: uniqueroomId 
+         });
     } catch (error) {
         console.log('error from accept request', error)
         return res.status(500).send("Internal server error");
