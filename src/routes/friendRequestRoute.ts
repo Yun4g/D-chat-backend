@@ -12,7 +12,7 @@ import notification from '../model/notification.js';
 const route = Router();
 
 interface PayloadTypes {
-    id: string,
+    userId: string,
     name: string,
     email: string,
     avatarUrl?: string,
@@ -52,7 +52,7 @@ route.post('/sendRequest', async (req, res) => {
             ]
         });
 
-        
+
         if (existingRequest) {
             return res.status(400).json({
                 message: "Friend request already sent",
@@ -72,7 +72,7 @@ route.post('/sendRequest', async (req, res) => {
             return res.status(400).json({ message: "Friend already exists" });
         }
 
-       
+
 
         const NewFriendRequest = await FriendRequestModel.create({
             senderId: senderId,
@@ -140,6 +140,8 @@ route.post('/AcceptRequest', async (req, res) => {
                 message: "You are already friends with this user",
             });
         }
+
+
         const getReceiver = await UserModel.findById(receiverId);
         if (!getReceiver) {
             return res.status(200).send("User not found")
@@ -223,12 +225,6 @@ route.post('/rejectRequest', async (req, res) => {
         });
 
 
-        io.to(senderId).emit('FriendRequest', {
-            receiverId,
-            status: 'rejected'
-        });
-
-
         return res.status(200).json({ message: "Request Rejected Succefully" })
     } catch (error) {
         res.status(500).send("internal server error");
@@ -245,6 +241,8 @@ route.get('/getfriends/:userId', async (req: Request, res: Response) => {
             receiverId: userId,
             status: "pending",
         }).select("senderId");
+
+
         const incomingPendingRequestsSenderId = incomingPendingRequests.map(req => req.senderId);
 
         const sentPendingRequests = await FriendRequestModel.find({
@@ -262,8 +260,7 @@ route.get('/getfriends/:userId', async (req: Request, res: Response) => {
             ],
         }).select("senderId receiverId");
 
-        const friendIds = friends.map(f => f.senderId.toString() === userId ? f.receiverId : f.senderId
-        );
+        const friendIds = friends.map(f => f.senderId.toString() === userId ? f.receiverId : f.senderId);
 
         const excludedUserIds = [
             ...incomingPendingRequestsSenderId,
@@ -280,8 +277,9 @@ route.get('/getfriends/:userId', async (req: Request, res: Response) => {
 
 
         const sentRequestMap: Record<string, string> = {};
+
         sentPendingRequests.forEach(req => {
-            sentRequestMap[req.receiverId.toString()] = req.status; // pending
+            sentRequestMap[req.receiverId.toString()] = req.status;
         });
 
 
@@ -305,17 +303,23 @@ route.get('/getfriends/:userId', async (req: Request, res: Response) => {
 
 //  get all request that is pending where i am the receiver 
 
-const getFriendsId = async (Id: string): Promise<string[]> => {
+const getFriendsId = async (ids: string | string[]): Promise<string[]> => {
+    const idArray = Array.isArray(ids) ? ids : [ids];
+
     const friends = await Freinds.find({
         status: "accepted",
-        $or: [{ senderId: Id }, { receiverId: Id }],
-    });
+        $or: [
+            { senderId: { $in: idArray } },
+            { receiverId: { $in: idArray } },
+        ],
+    }).lean();
 
-    return friends.map(f => f.senderId.toString() === Id ? f.receiverId.toString() : f.senderId.toString()
+    return friends.map(f =>
+        idArray.includes(f.senderId.toString())
+            ? f.receiverId.toString()
+            : f.senderId.toString()
     );
 };
-
-
 
 route.get('/getRequest/:userId', async (req: Request, res: Response) => {
     const { userId } = req.params;
@@ -324,7 +328,6 @@ route.get('/getRequest/:userId', async (req: Request, res: Response) => {
         const FindUser = await UserModel.findById(userId);
         if (!FindUser) {
             return res.status(404).json({ message: "User not found" });
-
         }
 
         const PendingRequest = await FriendRequestModel.find({
@@ -332,44 +335,44 @@ route.get('/getRequest/:userId', async (req: Request, res: Response) => {
             status: "pending",
         }).select("senderId");
 
-
-        if (PendingRequest.length == 0) {
+        if (PendingRequest.length === 0) {
             return res.status(200).json({
                 status: "success",
                 message: "Request successful",
                 senderRequest: []
-            })
+            });
         }
 
+        const PendingRequestIds = PendingRequest.map(req => req.senderId.toString());
 
-
-        const SenderId = PendingRequest.map(req => req.senderId)
-
-        //  get sender details and send senderId and
-        const getSenderIdDetails = await UserModel.find({
-            _id: { $in: SenderId },
+        // Get all pending senders
+        const pendingUsers = await UserModel.find({
+            _id: { $in: PendingRequestIds }
         }).select("-password");
 
+        // Get user friends once
+        const userFriends = await getFriendsId(userId);
+        const userFriendSet = new Set(userFriends);
 
-        const receiverFriendId = await getFriendsId(userId);
 
-
+        
         const payload: PayloadTypes[] = [];
 
-        for (const sender of getSenderIdDetails) {
-            const senderFriendId = await getFriendsId(sender._id.toString());
-            const senderId = sender._id.toString()
-            const mutualFriendsCount = senderFriendId.filter(id =>
-                receiverFriendId.includes(id)
+        // Compute mutual friends per sender
+        for (const sender of pendingUsers) {
+            const senderFriends = await getFriendsId(sender._id.toString());
+
+            const mutualFriendsCount = senderFriends.filter(id =>
+                userFriendSet.has(id)
             ).length;
 
             payload.push({
-                id: senderId,
+                userId: sender._id.toString(),
                 name: sender.userName,
                 email: sender.email,
                 avatarUrl: sender.avatarUrl,
                 mutualFriendsCount
-            })
+            });
         }
 
         return res.status(200).json({
@@ -377,11 +380,14 @@ route.get('/getRequest/:userId', async (req: Request, res: Response) => {
             message: "Request successful",
             senderRequest: payload
         });
+
     } catch (error) {
-        console.log('getRequest', error);
-        return res.status(500).send("internal server error");
+        console.log('getRequest error', error);
+        return res.status(500).send("Internal server error");
     }
-})
+});
+
+
 
 
 export default route;
