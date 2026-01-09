@@ -23,13 +23,15 @@ export const initialSocket = (server: HttpServer): Server => {
       callback?.();
     });
 
-    socket.on("joinRoom", (roomId: string, callback?: () => void) => {
+    socket.on("joinRoom", async (roomId, callback) => {
       socket.join(roomId);
-      console.log(`User joined room ${roomId}`);
-      callback?.();
 
-    }
-    );
+      const messages = await MessageModel.find({ roomId }).sort({ createdAt: 1 });
+      socket.emit("loadMessages", messages);
+
+      callback?.();
+    });
+
 
 
     socket.on("sendMessage", async (data) => {
@@ -44,7 +46,7 @@ export const initialSocket = (server: HttpServer): Server => {
       }
     });
 
-  
+
 
     socket.on("disconnect", () => {
       console.log("User disconnected:", socket.id);
