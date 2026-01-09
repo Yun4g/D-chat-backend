@@ -26,24 +26,32 @@ export const initialSocket = (server: HttpServer): Server => {
     socket.on("joinRoom", async (roomId, callback) => {
       socket.join(roomId);
 
-      
+
 
       callback?.();
     });
 
     socket.on("getMessages", async (roomId) => {
-    const messages = await MessageModel.find({ roomId }).sort({ createdAt: 1 });
-      socket.emit("loadMessages", messages);
+      const messages = await MessageModel.find({ roomId }).sort({ createdAt: 1 });
 
+
+      const normalized = messages.map(m => ({
+        _id: m._id,
+        message: m.message,
+        senderId: m.sender, 
+        roomId: m.roomId,
+        createdAt: m.timeStamp
+      }));
+      socket.emit("loadMessages", normalized);
     });
 
 
 
     socket.on("sendMessage", async (data) => {
       const { roomId, message, senderId } = data;
-        console.log("Message sent:", data); 
+      console.log("Message sent:", data);
       try {
-          io?.to(roomId).emit("receiveMessage", { message, senderId, roomId });
+        io?.to(roomId).emit("receiveMessage", { message, senderId, roomId });
         const savedMessage = await MessageModel.create({ message, sender: senderId, roomId });
         console.log("Message saved:", savedMessage);
 
