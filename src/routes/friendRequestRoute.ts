@@ -151,8 +151,6 @@ route.post('/AcceptRequest', async (req, res) => {
             return res.status(200).send("User not found")
         }
 
-
-
         const updateFriendReq = await FriendRequestModel.findOneAndUpdate(
             { senderId, receiverId, status: "pending" },
             { status: "accepted" },
@@ -162,8 +160,6 @@ route.post('/AcceptRequest', async (req, res) => {
         if (!updateFriendReq) {
             return res.status(404).json({ message: "Friend request not found" });
         };
-
-
         const uniqueroomId = uuidv4();
 
         await Freinds.create({
@@ -183,6 +179,7 @@ route.post('/AcceptRequest', async (req, res) => {
 
         io.to(senderId).emit("friendRequestAccepted", { senderId: receiverId, roomId: uniqueroomId });
         io.to(receiverId).emit("friendRequestAccepted", { senderId: senderId, roomId: uniqueroomId });
+        io.to(senderId).emit("inviteToRoom", uniqueroomId);
 
         return res.status(200).json({
             message: "Request Accepted Succefully",

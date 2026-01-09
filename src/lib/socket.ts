@@ -23,12 +23,14 @@ export const initialSocket = (server: HttpServer): Server => {
       callback?.();
     });
 
-    socket.on("joinRoom", (roomId: string) => {
+    socket.on("joinRoom", (roomId: string, callback?: () => void) => {
       socket.join(roomId);
-      console.log(`User joined room ${roomId}`);
-
+       console.log(`User joined room ${roomId}`);
+       callback?.();
+      
     }
     );
+
 
     socket.on("sendMessage", async (data) => {
       const { roomId, message, senderId } = data;
