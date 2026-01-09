@@ -16,37 +16,39 @@ export const initialSocket = (server: HttpServer): Server => {
 
   io.on("connection", (socket: Socket) => {
     console.log("User connected:", socket.id);
- 
-    socket.on("register", (userId: string) => {
+
+    socket.on("register", (userId: string, callback?: () => void) => {
       socket.join(userId);
-      console.log(`User ${userId} joined room ${userId}`); 
+      console.log(`User ${userId} registered and joined their personal room`);
+      callback?.(); 
     });
 
     socket.on("joinRoom", (roomId: string) => {
-        socket.join(roomId);
-        console.log(`User joined room ${roomId}`);
-    }
-   );
-
-   socket.on("sendMessage", async(data: { roomId: string; message: string; senderId: string }) => {
-         console.log("Server received:", data);   
-          const { roomId, message, senderId } = data;
-              await MessageModel.create({
-                message,
-                sender: senderId,
-                roomId
-             });
-           io?.to(roomId).emit("receiveMessage", { message, senderId });
-     }
-  )
-
+      socket.join(roomId);
+      console.log(`User joined room ${roomId}`);
   
+    }
+    );
+
+    socket.on("sendMessage", async (data: { roomId: string; message: string; senderId: string }) => {
+      console.log("Server received:", data);
+      const { roomId, message, senderId } = data;
+      await MessageModel.create({
+        message,
+        sender: senderId,
+        roomId
+      });
+      io?.to(roomId).emit("receiveMessage", { message, senderId, roomId });
+    }
+    )
+
+
     socket.on("disconnect", () => {
       console.log("User disconnected:", socket.id);
     });
- 
+
   });
-   return io;
+  return io;
 };
 
 export const getIO = (): Server => {
