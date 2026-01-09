@@ -50,8 +50,9 @@ export const initialSocket = (server: HttpServer): Server => {
     socket.on("sendMessage", async (data) => {
       const { roomId, message, senderId } = data;
       console.log("Message sent:", data);
+      const now = new Date();
       try {
-        io?.to(roomId).emit("receiveMessage", { message, senderId, roomId });
+        io?.to(roomId).emit("receiveMessage", { message, senderId, roomId , createdAt: now });
         const savedMessage = await MessageModel.create({ message, sender: senderId, roomId });
         console.log("Message saved:", savedMessage);
 
