@@ -26,10 +26,15 @@ export const initialSocket = (server: HttpServer): Server => {
     socket.on("joinRoom", async (roomId, callback) => {
       socket.join(roomId);
 
-      const messages = await MessageModel.find({ roomId }).sort({ createdAt: 1 });
-      socket.emit("loadMessages", messages);
+      
 
       callback?.();
+    });
+
+    socket.on("getMessages", async (roomId) => {
+    const messages = await MessageModel.find({ roomId }).sort({ createdAt: 1 });
+      socket.emit("loadMessages", messages);
+       socket.emit("loadMessages", messages);
     });
 
 
