@@ -20,27 +20,27 @@ export const initialSocket = (server: HttpServer): Server => {
     socket.on("register", (userId: string, callback?: () => void) => {
       socket.join(userId);
       console.log(`User ${userId} registered and joined their personal room`);
-      callback?.(); 
+      callback?.();
     });
 
     socket.on("joinRoom", (roomId: string) => {
       socket.join(roomId);
       console.log(`User joined room ${roomId}`);
-  
+
     }
     );
 
-    socket.on("sendMessage", async (data: { roomId: string; message: string; senderId: string }) => {
-      console.log("Server received:", data);
+    socket.on("sendMessage", async (data) => {
       const { roomId, message, senderId } = data;
-      await MessageModel.create({
-        message,
-        sender: senderId,
-        roomId
-      });
-      io?.to(roomId).emit("receiveMessage", { message, senderId, roomId });
-    }
-    )
+
+      try {
+        const savedMessage = await MessageModel.create({ message, sender: senderId, roomId });
+        console.log("Message saved:", savedMessage);
+        io?.to(roomId).emit("receiveMessage", { message, senderId, roomId });
+      } catch (err) {
+        console.error("Failed to save message:", err);
+      }
+    });
 
 
     socket.on("disconnect", () => {
