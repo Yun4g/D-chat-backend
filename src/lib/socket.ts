@@ -25,9 +25,9 @@ export const initialSocket = (server: HttpServer): Server => {
 
     socket.on("joinRoom", (roomId: string, callback?: () => void) => {
       socket.join(roomId);
-       console.log(`User joined room ${roomId}`);
-       callback?.();
-      
+      console.log(`User joined room ${roomId}`);
+      callback?.();
+
     }
     );
 
@@ -44,6 +44,7 @@ export const initialSocket = (server: HttpServer): Server => {
       }
     });
 
+  
 
     socket.on("disconnect", () => {
       console.log("User disconnected:", socket.id);
