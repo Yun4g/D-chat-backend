@@ -43,9 +43,10 @@ export const initialSocket = (server: HttpServer): Server => {
       const { roomId, message, senderId } = data;
         console.log("Message sent:", data); 
       try {
+          io?.to(roomId).emit("receiveMessage", { message, senderId, roomId });
         const savedMessage = await MessageModel.create({ message, sender: senderId, roomId });
         console.log("Message saved:", savedMessage);
-        io?.to(roomId).emit("receiveMessage", { message, senderId, roomId });
+
       } catch (err) {
         console.error("Failed to save message:", err);
       }
