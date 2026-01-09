@@ -14,9 +14,9 @@ const route = Router();
 
 
 route.post('/signup', upload.single('avatarUrl'), async (req, res) => {
-  
+
   try {
-    const { userName, email, password,  } = req.body;
+    const { userName, email, password, } = req.body;
     const file = (req as Request & { file?: Express.Multer.File }).file;
     if (!userName || !email || !password) {
       return res.status(400).json({
@@ -26,7 +26,7 @@ route.post('/signup', upload.single('avatarUrl'), async (req, res) => {
 
     const existingUser = await UserModel.findOne({ email });
     if (existingUser) {
-      return res.status(400).send('user with the given Email already exist')
+      return res.status(400).json({ message: 'User with the given Email already exists' });
     }
     let CloudImage = null;
     if (file) {
@@ -41,7 +41,7 @@ route.post('/signup', upload.single('avatarUrl'), async (req, res) => {
       if (!CloudImage) {
         return res.status(400).json({ error: 'Failed to upload avatar image.' });
       }
-    } 
+    }
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -78,15 +78,15 @@ route.post('/login', async (req, res, next) => {
 
     const existingAccount = await UserModel.findOne({ email });
     if (!existingAccount) {
-      return res.status(404).json( {message : ' user with the giving email does not exist '})
+      return res.status(404).json({ message: ' user with the giving email does not exist ' })
     }
 
     const isPasswordValid = await bcrypt.compare(password, existingAccount.password);
     if (!isPasswordValid) {
-      return res.status(400).json( {message: 'invalid  Password' })
+      return res.status(400).json({ message: 'invalid  Password' })
     }
 
-    
+
     const token = jwt.sign(
       { id: existingAccount._id, email: existingAccount.email },
       process.env.JWT_SECRET as string,
@@ -129,7 +129,7 @@ route.post('/forgot-password', async (req, res) => {
       `
     await sendForgotPassWordEmail(email, 'Password Reset Request', message);
     console.log('Password reset email sent to:', email);
-   return res.status(200).send('Password reset email sent successfully');
+    return res.status(200).send('Password reset email sent successfully');
   } catch (error) {
     console.log(error);
     res.status(500).send("server error  " + error);
@@ -140,7 +140,7 @@ route.post('/forgot-password', async (req, res) => {
 
 
 route.post('/reset-password/:token', async (req, res) => {
-  
+
 
   try {
     const { email, newPassword } = req.body;
