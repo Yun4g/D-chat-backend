@@ -41,7 +41,7 @@ export const initialSocket = (server: HttpServer): Server => {
 
     socket.on("sendMessage", async (data) => {
       const { roomId, message, senderId } = data;
-
+        console.log("Message sent:", data); 
       try {
         const savedMessage = await MessageModel.create({ message, sender: senderId, roomId });
         console.log("Message saved:", savedMessage);
