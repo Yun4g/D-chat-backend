@@ -32,7 +32,9 @@ export const initialSocket = (server: HttpServer): Server => {
     });
 
     socket.on("getMessages", async (roomId) => {
-      const messages = await MessageModel.find({ roomId }).sort({ createdAt: 1 });
+      const messages = await MessageModel.find({ roomId }).sort({ timeStamp: 1 });
+
+
 
 
       const normalized = messages.map(m => ({
@@ -52,6 +54,11 @@ export const initialSocket = (server: HttpServer): Server => {
 
       const { roomId, message, senderId } = data;
 
+      if (!roomId || !message || !senderId) {
+        console.error(" Invalid sendMessage payload:", data);
+        return;
+      }
+
       try {
         const savedMessage = await MessageModel.create({
           message,
@@ -64,7 +71,7 @@ export const initialSocket = (server: HttpServer): Server => {
           message: savedMessage.message,
           senderId: savedMessage.sender,
           roomId: savedMessage.roomId,
-          createdAt: savedMessage.timeStamp, 
+          createdAt: savedMessage.timeStamp,
         });
 
         console.log(" Message saved & emitted");
