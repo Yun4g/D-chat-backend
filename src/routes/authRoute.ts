@@ -140,8 +140,6 @@ route.post('/forgot-password', async (req, res) => {
 
 
 route.post('/reset-password/:token', async (req, res) => {
-
-
   try {
     const { email, newPassword } = req.body;
     const { token } = req.params;
@@ -151,7 +149,7 @@ route.post('/reset-password/:token', async (req, res) => {
       return res.status(401).send('Invalid or missing reset token');
     }
     if (!email || !newPassword) {
-      return res.status(400).send('Email and new password are required');
+      return res.status(400).json({message:'Email and new password are required'});
     }
     const existingUser = await UserModel.findOne({ email });
     if (!existingUser) {

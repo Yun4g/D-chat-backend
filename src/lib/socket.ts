@@ -38,7 +38,7 @@ export const initialSocket = (server: HttpServer): Server => {
       const normalized = messages.map(m => ({
         _id: m._id,
         message: m.message,
-        senderId: m.sender, 
+        senderId: m.sender,
         roomId: m.roomId,
         createdAt: m.timeStamp
       }));
@@ -48,18 +48,31 @@ export const initialSocket = (server: HttpServer): Server => {
 
 
     socket.on("sendMessage", async (data) => {
-      const { roomId, message, senderId } = data;
-      console.log("Message sent:", data);
-      const now = new Date();
-      try {
-        io?.to(roomId).emit("receiveMessage", { message, senderId, roomId , createdAt: now });
-        const savedMessage = await MessageModel.create({ message, sender: senderId, roomId });
-        console.log("Message saved:", savedMessage);
+      console.log("🔥 SERVER RECEIVED MESSAGE", data);
 
+      const { roomId, message, senderId } = data;
+
+      try {
+        const savedMessage = await MessageModel.create({
+          message,
+          sender: senderId,
+          roomId,
+        });
+
+        io?.to(roomId).emit("receiveMessage", {
+          _id: savedMessage._id,
+          message: savedMessage.message,
+          senderId: savedMessage.sender,
+          roomId: savedMessage.roomId,
+          createdAt: savedMessage.timeStamp, 
+        });
+
+        console.log(" Message saved & emitted");
       } catch (err) {
-        console.error("Failed to save message:", err);
+        console.error(" Failed to save message:", err);
       }
     });
+
 
 
 

@@ -233,12 +233,12 @@ route.get('/getfriends/:userId', async (req: Request, res: Response) => {
     const { userId } = req.params;
 
     try {
-
+  
         const incomingPendingRequests = await FriendRequestModel.find({
             receiverId: userId,
             status: "pending",
         }).select("senderId");
-
+ 
 
         const incomingPendingRequestsSenderId = incomingPendingRequests.map(req => req.senderId);
 
