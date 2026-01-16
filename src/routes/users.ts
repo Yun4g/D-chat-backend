@@ -14,9 +14,11 @@ route.get("/me", async (req: AuthRequest, res:Response) => {
 
        try {
             const getUserDetals = await UserModel.findOne({_id: userId});
-            if(getUserDetals?.email) {
-                return res.status(200).json(getUserDetals)
+            if(!getUserDetals) {
+                return res.status(404).json({message:"cannot find userDetails"})
             }
+
+            return res.status(200).json(getUserDetals)
        } catch (error) {
           return res.status(500).json({message: "internal server error"})
        }

@@ -13,7 +13,6 @@ interface AccessTokenPayload extends JwtPayload {
 
 
 export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
-
     const token = req.cookies?.accessToken;
     if (!token) {
         return res.status(401).json({ message: 'Access Token missing' });
