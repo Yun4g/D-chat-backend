@@ -1,16 +1,12 @@
 import jwt from "jsonwebtoken";
 export const authMiddleware = (req, res, next) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-        return res.status(401).json({ message: 'Authorization header missing' });
-    }
-    const token = authHeader.split(' ')[1];
+    const token = req.cookies?.accessToken;
     if (!token) {
-        return res.status(401).json({ message: 'Token missing' });
+        return res.status(401).json({ message: 'Access Token missing' });
     }
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_JWT_SECRET);
+        req.userId = decoded.id;
         next();
     }
     catch (err) {

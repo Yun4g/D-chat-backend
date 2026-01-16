@@ -1,6 +1,6 @@
 import { AuthRequest } from './../middleware/authMiddleware';
 import { Response, Router } from "express";
-import { UserModel } from "../model/UserScehema";
+import { UserModel } from "../model/UserSchema.js";
 
 
 

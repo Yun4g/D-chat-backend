@@ -1,7 +1,7 @@
 import { Router, Request } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { UserModel } from "../model/UserScehema.js";
+import { UserModel } from "../model/UserSchema.js";
 import { uploadToCloud } from "../utils/cloudUpload.js";
 import upload from "../middleware/mutler.js";
 import { sendForgotPassWordEmail } from "../utils/sendEmail.js";

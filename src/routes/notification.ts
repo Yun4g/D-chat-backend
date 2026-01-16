@@ -1,6 +1,6 @@
 import { Router } from "express";
 import Notification from "../model/notification.js";
-import { UserModel } from "../model/UserScehema.js";
+import { UserModel } from "../model/UserSchema.js";
 
 const route = Router();
 route.get("/notification/:userId", async (req, res) => {

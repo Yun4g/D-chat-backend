@@ -1,6 +1,6 @@
 import { Router } from "express";
 import Freinds from "../model/freindSchema.js";
-import { UserModel } from "../model/UserScehema.js";
+import { UserModel } from "../model/UserSchema.js";
 import { MessageModel } from "../model/messageSchema.js";
 const route = Router();
 route.get('/friendsList/:userId', async (req, res) => {

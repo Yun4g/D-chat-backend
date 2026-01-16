@@ -1,6 +1,6 @@
 
 import { Request, Response, Router } from "express";
-import { UserModel } from "../model/UserScehema.js";
+import { UserModel } from "../model/UserSchema.js";
 import FriendRequestModel from "../model/friendRequestModel.js";
 import { sendFreindRequestEmail } from "../utils/sendEmail.js";
 import { getIO } from '../lib/socket.js';

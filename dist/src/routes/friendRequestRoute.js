@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { UserModel } from "../model/UserScehema.js";
+import { UserModel } from "../model/UserSchema.js";
 import FriendRequestModel from "../model/friendRequestModel.js";
 import { sendFreindRequestEmail } from "../utils/sendEmail.js";
 import { getIO } from '../lib/socket.js';
@@ -138,6 +138,7 @@ route.post('/AcceptRequest', async (req, res) => {
         await sendFreindRequestEmail(recieverEmail, `you succesfully accepted ${Sender.userName}`, message);
         io.to(senderId).emit("friendRequestAccepted", { senderId: receiverId, roomId: uniqueroomId });
         io.to(receiverId).emit("friendRequestAccepted", { senderId: senderId, roomId: uniqueroomId });
+        io.to(senderId).emit("inviteToRoom", uniqueroomId);
         return res.status(200).json({
             message: "Request Accepted Succefully",
             roomId: uniqueroomId

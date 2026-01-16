@@ -7,6 +7,7 @@ const UserSchema = new mongoose.Schema({
     bio: { type: String },
     createdAt: { type: Date, default: Date.now },
     pendingRequestId: { type: String, },
+    RefreshToken: { type: String, }
 });
 const UserModel = mongoose.model("User", UserSchema);
 export { UserModel };
