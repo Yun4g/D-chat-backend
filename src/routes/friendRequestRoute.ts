@@ -43,7 +43,6 @@ route.post('/sendRequest', async (req, res) => {
         if (!Sender) {
             return res.status(404).send("User not found")
         }
-
         const existingRequest = await FriendRequestModel.findOne({
             status: "pending",
             $or: [
@@ -51,15 +50,11 @@ route.post('/sendRequest', async (req, res) => {
                 { senderId: receiverId, receiverId: senderId }
             ]
         });
-
-
         if (existingRequest) {
             return res.status(400).json({
                 message: "Friend request already sent",
             });
         }
-
-
         const existingFriend = await Freinds.findOne({
             status: "accepted",
             $or: [
@@ -233,13 +228,11 @@ route.get('/getfriends/:userId', async (req: Request, res: Response) => {
     const { userId } = req.params;
 
     try {
-  
         const incomingPendingRequests = await FriendRequestModel.find({
             receiverId: userId,
             status: "pending",
         }).select("senderId");
  
-
         const incomingPendingRequestsSenderId = incomingPendingRequests.map(req => req.senderId);
 
         const sentPendingRequests = await FriendRequestModel.find({
@@ -272,13 +265,11 @@ route.get('/getfriends/:userId', async (req: Request, res: Response) => {
             },
         });
 
-
         const sentRequestMap: Record<string, string> = {};
 
         sentPendingRequests.forEach(req => {
             sentRequestMap[req.receiverId.toString()] = req.status;
         });
-
 
         const usersWithStatus = getOtherUsers.map(user => {
             return {

@@ -10,6 +10,7 @@ interface IUser {
     createdAt?: Date;
     bio?: string;
     pendingRequestId?: string | number;
+    RefreshToken?: string;
 
 }
 
@@ -22,6 +23,7 @@ const UserSchema = new mongoose.Schema<IUser>({
     bio:  { type: String },
     createdAt: { type: Date, default: Date.now },
     pendingRequestId: { type: String,  },
+    RefreshToken: {type: String,}
 });
 
 

@@ -25,9 +25,6 @@ export const initialSocket = (server: HttpServer): Server => {
 
     socket.on("joinRoom", async (roomId, callback) => {
       socket.join(roomId);
-
-
-
       callback?.();
     });
 

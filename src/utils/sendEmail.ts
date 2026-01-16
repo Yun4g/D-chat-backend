@@ -2,13 +2,8 @@
 
 import axios from "axios";
 
-export const sendForgotPassWordEmail = async (
-  to: string,
-  subject: string,
-  html: string
-) => {
-  return axios.post(
-    "https://api.brevo.com/v3/smtp/email",
+export const sendForgotPassWordEmail = async ( to: string, subject: string, html: string) => {
+  return axios.post("https://api.brevo.com/v3/smtp/email",
     {
       sender: {
         name: "D-Chat",
@@ -28,7 +23,7 @@ export const sendForgotPassWordEmail = async (
   );
 };
 
-
+    
 
 
 export const sendFreindRequestEmail = async (

@@ -15,8 +15,6 @@ export const uploadToCloud = async (imageUrl: unknown) => {
                 folder: "D-CHAT/avatars",
                 resource_type: "auto", 
             })
-             console.log(uploadResponse)
-             console.log(uploadResponse.secure_url)
             return uploadResponse.secure_url;
         } catch (error) {
             console.log('cloud upload error', error)

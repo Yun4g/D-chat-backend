@@ -43,6 +43,7 @@ route.post('/signup', upload.single('avatarUrl'), async (req, res) => {
       }
     }
 
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
     const newUser = await UserModel.create({
@@ -72,6 +73,7 @@ route.post('/login', async (req, res, next) => {
 
   try {
     const { email, password } = req.body;
+
     if (!email || !password) {
       return res.status(400).send(' email , password  are required')
     }
@@ -83,25 +85,83 @@ route.post('/login', async (req, res, next) => {
 
     const isPasswordValid = await bcrypt.compare(password, existingAccount.password);
     if (!isPasswordValid) {
-      return res.status(400).json({ message: 'invalid  Password' })
+      return res.status(400).json({ message: 'invalid  Password' });
     }
 
 
-    const token = jwt.sign(
-      { id: existingAccount._id, email: existingAccount.email },
-      process.env.JWT_SECRET as string,
-      { expiresIn: '7d' }
+    const accessToken = jwt.sign({ id: existingAccount._id, email: existingAccount.email },
+      process.env.ACCESS_TOKEN_JWT_SECRET as string, { expiresIn: "15m" }
     )
 
-    const { password: _, ...userData } = existingAccount.toObject();
 
-    return res.status(200).json({ status: "success", user: userData, token: token });
+    const RefreshToken = jwt.sign({ id: existingAccount._id, email: existingAccount.email },
+      process.env.REFRESH_TOKEN_JWT_SECRET as string, { expiresIn: "7d" }
+    );
+
+    existingAccount.RefreshToken = RefreshToken;
+    await existingAccount.save();
+
+
+    // const { password: _, ...userData } = existingAccount.toObject();
+
+    return res.cookie("accesToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: "none",
+      maxAge: 15 * 60 * 1000,
+    }).cookie("refreshToken", RefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    })
 
   } catch (error) {
     console.log(error)
     next(error);
   }
-})
+});
+
+
+//   create refresh Token 
+
+route.post("/refresh-token", async (req, res) => {
+  try {
+    const token = req.cookies?.refreshToken;
+
+    if (!token) {
+      return res.status(401).json({ message: "Refresh token missing" });
+    }
+
+    const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_JWT_SECRET!) as { id: string; email: string };
+
+    const user = await UserModel.findById(decoded.id);
+
+    if (!user || user.RefreshToken !== token) {
+      return res.status(401).json({ message: "Invalid refresh token" });
+    }
+
+
+    const newAccessToken = jwt.sign(
+      { id: user._id, email: user.email },
+      process.env.ACCESS_TOKEN_JWT_SECRET!,
+      { expiresIn: "15m" }
+    );
+
+    res.cookie("accessToken", newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "none",
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.json({ message: "Access token renewed" });
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid or expired refresh token" });
+  }
+});
+
+
 
 
 
@@ -149,7 +209,7 @@ route.post('/reset-password/:token', async (req, res) => {
       return res.status(401).send('Invalid or missing reset token');
     }
     if (!email || !newPassword) {
-      return res.status(400).json({message:'Email and new password are required'});
+      return res.status(400).json({ message: 'Email and new password are required' });
     }
     const existingUser = await UserModel.findOne({ email });
     if (!existingUser) {
