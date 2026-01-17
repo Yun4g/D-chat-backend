@@ -18,8 +18,6 @@ import FriendsRequest from  './routes/friendRequestRoute.js'
 const server = express();
 
 
-server.use(express.json());
-server.use(cookieParser());
 
 server.use(cors({
   origin: ['http://localhost:5173', 'https://d-chat-one.vercel.app'],
@@ -27,6 +25,10 @@ server.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
    credentials: true,
 }));
+
+server.use(express.json());
+server.use(cookieParser());
+
 
 
 

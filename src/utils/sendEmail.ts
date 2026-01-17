@@ -1,5 +1,3 @@
-
-
 import axios from "axios";
 
 export const sendForgotPassWordEmail = async ( to: string, subject: string, html: string) => {

@@ -1,27 +1,30 @@
-import { AuthRequest } from './../middleware/authMiddleware';
-import { Response, Router } from "express";
-import { UserModel } from "../model/UserSchema.js";
-
-
+import { Router, Response } from "express";
+import { AuthRequest } from "../middleware/authMiddleware";
+import { UserModel } from "../model/UserSchema";
 
 const route = Router();
 
-// hyration endpoint
+route.get("/me", async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId;
 
-route.get("/me", async (req: AuthRequest, res:Response) => {
-      const userId = req.userId;
-      if(!userId) return res.status(400).json({message: "usersId not found"})
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
 
-       try {
-            const getUserDetals = await UserModel.findOne({_id: userId});
-            if(!getUserDetals) {
-                return res.status(404).json({message:"cannot find userDetails"})
-            }
+    const user = await UserModel
+      .findById(userId)
+      .select("-password");
 
-            return res.status(200).json(getUserDetals)
-       } catch (error) {
-          return res.status(500).json({message: "internal server error"})
-       }
-})
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json(user);
+  } catch (error) {
+    console.error("ME endpoint error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 export default route;

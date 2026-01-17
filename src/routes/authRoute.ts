@@ -219,7 +219,7 @@ route.post('/reset-password/:token', async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, salt);
     existingUser.password = hashedPassword;
     await existingUser.save();
-
+    
     return res.status(200).send('Password updated successfully');
   } catch (error) {
     console.log(error);
