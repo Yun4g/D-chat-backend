@@ -1,6 +1,6 @@
 import { Router, Response } from "express";
 import { AuthRequest } from "../middleware/authMiddleware";
-import { UserModel } from "../model/UserSchema";
+import { UserModel } from "../model/UserSchema.js";
 
 const route = Router();
 
