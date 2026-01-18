@@ -129,7 +129,7 @@ route.post("/refresh-token", async (req, res) => {
   try {
     const token = req.cookies?.refreshToken;
 
-    if (!token) {
+    if (!token) { 
       return res.status(401).json({ message: "Refresh token missing" });
     }
 
@@ -137,7 +137,7 @@ route.post("/refresh-token", async (req, res) => {
 
     const user = await UserModel.findById(decoded.id);
 
-    if (!user || user.RefreshToken !== token) {
+    if (!user) {
       return res.status(401).json({ message: "Invalid refresh token" });
     }
 

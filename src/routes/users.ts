@@ -12,9 +12,7 @@ route.get("/me", async (req: AuthRequest, res: Response) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const user = await UserModel
-      .findById(userId)
-      .select("-password");
+    const user = await UserModel.findById(userId).select("-password");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
