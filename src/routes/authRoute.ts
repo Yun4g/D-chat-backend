@@ -102,7 +102,7 @@ route.post('/login', async (req, res, next) => {
     await existingAccount.save();
 
 
-    // const { password: _, ...userData } = existingAccount.toObject();
+    const { password: _, ...userData } = existingAccount.toObject();
     return res
       .cookie("accesToken", accessToken, {
         httpOnly: true,
@@ -118,7 +118,7 @@ route.post('/login', async (req, res, next) => {
         path: "/",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       })
-      .json({ message: "Login successful" });
+      .json({ message: "Login successful" , userData });
 
   } catch (error) {
     console.log(error)
