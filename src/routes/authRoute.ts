@@ -106,12 +106,12 @@ route.post('/login', async (req, res, next) => {
 
     return res.cookie("accesToken", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true,
       sameSite: "none",
       maxAge: 15 * 60 * 1000,
     }).cookie("refreshToken", RefreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true,
       sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     }).json({message: "Login successfull"})
@@ -148,9 +148,9 @@ route.post("/refresh-token", async (req, res) => {
       { expiresIn: "15m" }
     );
 
-    res.cookie("accessToken", newAccessToken, {
+    res.cookie("accesToken", newAccessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: true,
       sameSite: "none",
       maxAge: 15 * 60 * 1000,
     });
