@@ -107,14 +107,14 @@ route.post('/login', async (req, res, next) => {
       .cookie("accesToken", accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production", 
-        sameSite: "none",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
         maxAge: 15 * 60 * 1000,
       })
       .cookie("refreshToken", RefreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production", 
-        sameSite: "none",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       })
@@ -154,8 +154,8 @@ route.post("/refresh-token", async (req, res) => {
 
     res.cookie("accesToken", newAccessToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 15 * 60 * 1000,
     });
 
