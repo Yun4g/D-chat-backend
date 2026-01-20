@@ -42,6 +42,8 @@ const Port = process.env.PORT  || 5000;
 server.use(express.urlencoded({ extended: true }));
 
 
+
+
 server.use('/api', authRoute);
 server.use('/api', authMiddleware, FriendsRequest )
 server.use('/api',  authMiddleware,  chat);
@@ -51,8 +53,8 @@ server.get('/', (req, res) => {
      res.send('Welcome to D-CHAT Backend')
 });
 
-server.get("/test", (req, res) => {
-  res.send("Latest code is running");
+server.get("/debug-cookies", (req, res) => {
+  res.json({cookies: req.cookies, message:"cookies"});
 });
 
 
