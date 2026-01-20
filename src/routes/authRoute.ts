@@ -103,18 +103,22 @@ route.post('/login', async (req, res, next) => {
 
 
     // const { password: _, ...userData } = existingAccount.toObject();
-
-    return res.cookie("accesToken", accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 15 * 60 * 1000,
-    }).cookie("refreshToken", RefreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    }).json({message: "Login successfull"})
+    return res
+      .cookie("accesToken", accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production", 
+        sameSite: "none",
+        path: "/",
+        maxAge: 15 * 60 * 1000,
+      })
+      .cookie("refreshToken", RefreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production", 
+        sameSite: "none",
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      })
+      .json({ message: "Login successful" });
 
   } catch (error) {
     console.log(error)
@@ -129,7 +133,7 @@ route.post("/refresh-token", async (req, res) => {
   try {
     const token = req.cookies?.refreshToken;
 
-    if (!token) { 
+    if (!token) {
       return res.status(401).json({ message: "Refresh token missing" });
     }
 
@@ -219,7 +223,7 @@ route.post('/reset-password/:token', async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, salt);
     existingUser.password = hashedPassword;
     await existingUser.save();
-    
+
     return res.status(200).send('Password updated successfully');
   } catch (error) {
     console.log(error);
