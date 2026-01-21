@@ -106,19 +106,19 @@ route.post('/login', async (req, res, next) => {
     return res
       .cookie("accesToken", accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production", 
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        secure: true,        // REQUIRED
+        sameSite: "none",
         path: "/",
-        maxAge: 15 * 24 * 60 * 60 *  1000,
+        maxAge: 15 * 24 * 60 * 60 * 1000,
       })
       .cookie("refreshToken", RefreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production", 
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        secure: true,        // REQUIRED
+        sameSite: "none",
         path: "/",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       })
-      .json({ message: "Login successful" , userData });
+      .json({ message: "Login successful", userData });
 
   } catch (error) {
     console.log(error)
@@ -154,8 +154,8 @@ route.post("/refresh-token", async (req, res) => {
 
     res.cookie("accesToken", newAccessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: true,        // REQUIRED
+      sameSite: "none",
       maxAge: 15 * 60 * 1000,
     });
 
