@@ -103,22 +103,19 @@ route.post('/login', async (req, res, next) => {
 
 
     const { password: _, ...userData } = existingAccount.toObject();
-    return res
-      .cookie("accesToken", accessToken, {
+    return res.cookie("accesToken", accessToken, {
         httpOnly: true,
-        secure: true,        // REQUIRED
+        secure: true,      
         sameSite: "none",
         path: "/",
-        maxAge: 15 * 24 * 60 * 60 * 1000,
-      })
-      .cookie("refreshToken", RefreshToken, {
+        maxAge: 15 * 60 * 1000,
+      }).cookie("refreshToken", RefreshToken, {
         httpOnly: true,
-        secure: true,        // REQUIRED
+        secure: true,        
         sameSite: "none",
         path: "/",
         maxAge: 7 * 24 * 60 * 60 * 1000,
-      })
-      .json({ message: "Login successful", userData });
+      }).json({ message: "Login successful", userData });
 
   } catch (error) {
     console.log(error)
