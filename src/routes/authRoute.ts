@@ -109,7 +109,7 @@ route.post('/login', async (req, res, next) => {
         secure: process.env.NODE_ENV === "production", 
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         path: "/",
-        maxAge: 15 * 60 * 1000,
+        maxAge: 15 * 24 * 60 * 60 *  1000,
       })
       .cookie("refreshToken", RefreshToken, {
         httpOnly: true,
