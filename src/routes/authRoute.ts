@@ -68,7 +68,7 @@ route.post('/signup', upload.single('avatarUrl'), async (req, res) => {
 });
 
 
-
+ const isProuction = process.env.NODE_ENV === 'production';
 route.post('/login', async (req, res, next) => {
 
   try {
@@ -103,16 +103,16 @@ route.post('/login', async (req, res, next) => {
 
 
     const { password: _, ...userData } = existingAccount.toObject();
-    return res.cookie("accesToken", accessToken, {
+    return res.cookie("accessToken", accessToken, {
         httpOnly: true,
-        secure: true,      
-        sameSite: "none",
+        secure: isProuction,      
+        sameSite: isProuction ? "none" : "lax",
         path: "/",
-        maxAge: 15 * 60 * 1000,
+        maxAge: 5 * 60 * 1000,
       }).cookie("refreshToken", RefreshToken, {
         httpOnly: true,
-        secure: true,        
-        sameSite: "none",
+        secure: isProuction,        
+        sameSite: isProuction ? "none" : "lax",
         path: "/",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       }).json({ message: "Login successful", userData });
@@ -149,11 +149,11 @@ route.post("/refresh-token", async (req, res) => {
       { expiresIn: "15m" }
     );
 
-    res.cookie("accesToken", newAccessToken, {
+    res.cookie("accessToken", newAccessToken, {
       httpOnly: true,
-      secure: true,        // REQUIRED
-      sameSite: "none",
-      maxAge: 15 * 60 * 1000,
+      secure: isProuction,        
+      sameSite: isProuction ? "none" : "lax",
+      maxAge: 15 * 60 * 60 * 1000,
     });
 
     res.json({ message: "Access token renewed" });
