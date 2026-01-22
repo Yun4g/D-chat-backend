@@ -68,7 +68,7 @@ route.post('/signup', upload.single('avatarUrl'), async (req, res) => {
 });
 
 
- const isProuction = process.env.NODE_ENV === 'production';
+
 route.post('/login', async (req, res, next) => {
 
   try {
@@ -105,14 +105,14 @@ route.post('/login', async (req, res, next) => {
     const { password: _, ...userData } = existingAccount.toObject();
     return res.cookie("accessToken", accessToken, {
         httpOnly: true,
-        secure: isProuction,      
-        sameSite: isProuction ? "none" : "lax",
+        secure: true,      
+        sameSite:  "none",
         path: "/",
         maxAge: 5 * 60 * 1000,
       }).cookie("refreshToken", RefreshToken, {
         httpOnly: true,
-        secure: isProuction,        
-        sameSite: isProuction ? "none" : "lax",
+        secure: true,        
+        sameSite: "none" ,
         path: "/",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       }).json({ message: "Login successful", userData });
@@ -151,8 +151,8 @@ route.post("/refresh-token", async (req, res) => {
 
     res.cookie("accessToken", newAccessToken, {
       httpOnly: true,
-      secure: isProuction,        
-      sameSite: isProuction ? "none" : "lax",
+      secure: true,        
+      sameSite: "none",
       maxAge: 15 * 60 * 60 * 1000,
     });
 
